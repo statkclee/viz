@@ -14,7 +14,7 @@ title: 데이터 과학 -- 시각화
 
 ## 학습목차 
 
-1. 
+1. [hello](hello.html)
 
 ### [xwMOOC 오픈 교재](https://statkclee.github.io/xwMOOC/)
 
