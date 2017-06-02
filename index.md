@@ -27,7 +27,7 @@ title: 데이터 과학 -- 시각화
     - [데이터 시각화(ggplot2, ggvis)](viz-ggplot2.html)
     - [R 시각화 카탈로그](http://shiny.stat.ubc.ca/r-graph-catalog/)
     - [ggvis](viz-ggvis.html)
-    - [격자그림(Trellis Graphics) - Small multiple](viz-trellis.html)
+    - [`lattice` - 격자그림(Trellis Graphics)](viz-trellis.html)
 
 ### [xwMOOC 오픈 교재](https://statkclee.github.io/xwMOOC/)
 
