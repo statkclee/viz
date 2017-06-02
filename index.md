@@ -14,7 +14,18 @@ title: 데이터 과학 -- 시각화
 
 ## 학습목차 
 
-1. [hello](hello.html)
+- [시각화(Visualization)](viz.html)
+    - [기념비적인 시각화 역작모음](viz-history.html)
+    - [R 그래프 글꼴(font)](viz-r-font.html)
+    - [R 과 색상](viz-r-colors.html)
+    - [ggplot2 색상 제어](viz-ggplot2-control.html)
+    - [행복한 시각화 생활을 위한 비밀](viz-secret.html)
+    - [그래프 한장에 찍기](viz-multiple-plots.html)
+    - [그림을 파일에 저장](viz-save-plot.html) 
+    - [데이터 시각화(ggplot2, ggvis)](viz-ggplot2.html)
+    - [R 시각화 카탈로그](http://shiny.stat.ubc.ca/r-graph-catalog/)
+    - [ggvis](viz-ggvis.html)
+    - [격자그림(Trellis Graphics) - Small multiple](viz-trellis.html)
 
 ### [xwMOOC 오픈 교재](https://statkclee.github.io/xwMOOC/)
 
