@@ -2,6 +2,7 @@
 
 
 
+
 > ## 학습 목표  {.objectives}
 >
 > * Anscombe 데이터를 통해 데이터 시각화의 중요성을 이해한다.
@@ -9,57 +10,91 @@
 > * 시각화 산출물을 만들어내는 3가지 R 시각화 시스템을 살펴본다.
 
 
-## 1. Anscombe 4종류 데이터(Anscombe's Quartet) [^anscombe] [^anscombe-jstor]
+## 1. 시각화  [^tamara] 
+
+[^tamara]: [Tamara Munzner. Visualization Analysis and Design. A K Peters Visualization Series, CRC Press, 2014](http://www.cs.ubc.ca/~tmm/vadbook/)
+
+컴퓨터를 기반으로 한 시각화 시스템은 시각적으로 데이터를 표현함으로 인해서 
+사람들이 작업을 더욱 효율적으로 수행할 수 있도록 돕는다.
+
+여기서 시각화가 적합한 상황은 인공지능 및 전사화를 통해 사람을 대체하기 보다는 인간능력을 증강시키는데 유용하다.
+따라서, 완전 자동화 해결책이 존재하고 신뢰성이 있는 경우 시각화가 그다지 필요하지는 않는다.
+또한, 많은 분석문제에는 어떤 질문을 던져야 되는지 사전에 알고 있는 경우가 적어, 명세가 분명하지 않는 경우가 있는데,
+이런 목적에 유용하다.
+
+> ### 시각화 {.callout}
+> 
+> "Computer-based visualization systems provide visual representations of datasets
+ designed to help people carry out tasks more effectively" -- Tamara Munzner
+
+
+### 1.1. 시각화가 왜 필요한가?
+
+**인지부하(cognitive load)**를 **시각적 지각(perception)**으로 바꿔 해당 작업을 더욱 효과적으로 처리하는데 시각화를 사용한다.
+
+
+~~~{.r}
+# library(datasets)
+# library(tidyverse)
+# library(ggplot2)
+# library(gridExtra)
+# library(lattice)
+# library(DT)
+# library(grid)
+
+datatable(women)
+~~~
+
+<!--html_preserve--><div id="htmlwidget-1e89c0c17804b4655d57" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-1e89c0c17804b4655d57">{"x":{"filter":"none","data":[["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15"],[58,59,60,61,62,63,64,65,66,67,68,69,70,71,72],[115,117,120,123,126,129,132,135,139,142,146,150,154,159,164]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>height<\/th>\n      <th>weight<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"crosstalkOptions":{"key":null,"group":null},"columnDefs":[{"className":"dt-right","targets":[1,2]},{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false},"selection":{"mode":"multiple","selected":null,"target":"row"}},"evals":[],"jsHooks":[]}</script><!--/html_preserve-->
+
+`women` 데이터가 정렬이 되어 있어서, 신장이 커짐에 따라 체중이 증가하는 것을 알 수 있지만, 데이터만 보고 이해하려면
+인지적으로 데이터 한줄을 읽고 머리속으로 생각하고, 두번째 줄을 읽고 생각하고, ... 이런 과정을 반복하면서 인지적 부하가 증가하게 된다.
+하지만, 시각적으로 표현하게 되면 한눈에 신장과 체중 관계를 볼 수 있다.
+
+
+~~~{.r}
+women %>% ggplot(aes(y=weight, x=height)) + 
+    geom_point(color='blue', size=2) +
+    geom_smooth(color='pink')
+~~~
+
+<img src="fig/viz-motivation-woman-1.png" style="display: block; margin: auto;" />
+
+
+
+### 1.2. Anscombe 4종류 데이터(Anscombe's Quartet) [^anscombe] [^anscombe-jstor]
 
 Anscombe는 1973년 동일한 통계량을 갖는 4종류 데이터셋을 만들어서 시각화의 중요성을 공개했다.
 
 |  통계량     |   값  |
-|-------------|-------|
+|:-------------:|:-------:|
 |  평균(`x`)  |  9    |
 |  분산(`x`)  |  11   |
 |  평균(`y`)  |  7.5  |
 |  분산(`y`)  |  4.1  |
 |  상관계수   |  0.82  |
-|  회귀식     |  y = 3.0 + 0.5*x |
-
+|  회귀식     |  $y = 3.0 + 0.5 \times x$ |
 
 
 [^anscombe]: [Anscombe quartet](https://en.wikipedia.org/wiki/Anscombe%27s_quartet)
 [^anscombe-jstor]: Anscombe, F. J. (1973). "Graphs in Statistical Analysis". American Statistician 27 (1): 17–21.
 
 
+#### 1.2.1. Anscombe 데이터셋 4종 기술통계량
+
 
 ~~~{.r}
-# library(gridExtra)
-
 data(anscombe)
-anscombe
+datatable(anscombe) 
 ~~~
 
-
-
-~~~{.output}
-   x1 x2 x3 x4    y1   y2    y3    y4
-1  10 10 10  8  8.04 9.14  7.46  6.58
-2   8  8  8  8  6.95 8.14  6.77  5.76
-3  13 13 13  8  7.58 8.74 12.74  7.71
-4   9  9  9  8  8.81 8.77  7.11  8.84
-5  11 11 11  8  8.33 9.26  7.81  8.47
-6  14 14 14  8  9.96 8.10  8.84  7.04
-7   6  6  6  8  7.24 6.13  6.08  5.25
-8   4  4  4 19  4.26 3.10  5.39 12.50
-9  12 12 12  8 10.84 9.13  8.15  5.56
-10  7  7  7  8  4.82 7.26  6.42  7.91
-11  5  5  5  8  5.68 4.74  5.73  6.89
-
-~~~
-
-### 1.1. Anscombe 데이터셋 4종 기술통계량
-
+<!--html_preserve--><div id="htmlwidget-df2e66601df2d0148994" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-df2e66601df2d0148994">{"x":{"filter":"none","data":[["1","2","3","4","5","6","7","8","9","10","11"],[10,8,13,9,11,14,6,4,12,7,5],[10,8,13,9,11,14,6,4,12,7,5],[10,8,13,9,11,14,6,4,12,7,5],[8,8,8,8,8,8,8,19,8,8,8],[8.04,6.95,7.58,8.81,8.33,9.96,7.24,4.26,10.84,4.82,5.68],[9.14,8.14,8.74,8.77,9.26,8.1,6.13,3.1,9.13,7.26,4.74],[7.46,6.77,12.74,7.11,7.81,8.84,6.08,5.39,8.15,6.42,5.73],[6.58,5.76,7.71,8.84,8.47,7.04,5.25,12.5,5.56,7.91,6.89]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>x1<\/th>\n      <th>x2<\/th>\n      <th>x3<\/th>\n      <th>x4<\/th>\n      <th>y1<\/th>\n      <th>y2<\/th>\n      <th>y3<\/th>\n      <th>y4<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"crosstalkOptions":{"key":null,"group":null},"columnDefs":[{"className":"dt-right","targets":[1,2,3,4,5,6,7,8]},{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false},"selection":{"mode":"multiple","selected":null,"target":"row"}},"evals":[],"jsHooks":[]}</script><!--/html_preserve-->
 
 ~~~{.r}
 # x1, x2, x3, x4 평균
-sapply(1:4, function(x) mean(anscombe[,x]))
+purrr::map_dbl(1:4, function(x) mean(anscombe[,x]))
 ~~~
 
 
@@ -76,7 +111,7 @@ sapply(1:4, function(x) mean(anscombe[,x]))
 #   summarize(x1Mean=round(mean(x1),1), y2Mean=round(mean(x2),2), y3Mean=round(mean(x3),1), y4Mean=round(mean(x4),1))
 
 # x1, x2, x3, x4 분산
-sapply(1:4, function(x) var(anscombe[,x]))
+purrr::map_dbl(1:4, function(x) var(anscombe[,x]))
 ~~~
 
 
@@ -93,7 +128,7 @@ sapply(1:4, function(x) var(anscombe[,x]))
 #   summarize(x1Var=round(var(x1),1), x2Var=round(var(x2),1), x3Var=round(var(x3),1), x4Var=round(var(x4),1))
 
 # y1, y2, y3, y4 평균
-sapply(5:8, function(x) mean(anscombe[,x]))
+purrr::map_dbl(5:8, function(x) mean(anscombe[,x]))
 ~~~
 
 
@@ -110,7 +145,7 @@ sapply(5:8, function(x) mean(anscombe[,x]))
 #   summarize(y1Mean=round(mean(y1),1), y2Mean=round(mean(y2),2), y3Mean=round(mean(y3),1), y4Mean=round(mean(y4),1))
 
 # y1, y2, y3, y4 분산
-sapply(5:8, function(x) var(anscombe[,x]))
+purrr::map_dbl(5:8, function(x) var(anscombe[,x]))
 ~~~
 
 
@@ -128,7 +163,7 @@ sapply(5:8, function(x) var(anscombe[,x]))
 
 # x1:y1 ~ x4:y4 상관계수
 # 상관계수
-sapply(1:4, function(x) cor(anscombe[, x], anscombe[, x+4]))
+purrr::map_dbl(1:4, function(x) cor(anscombe[, x], anscombe[, x+4]))
 ~~~
 
 
@@ -207,7 +242,7 @@ intercept     slope
 
 ~~~
 
-### 1.2. Anscombe 데이터셋 4종 시각화
+#### 1.2.2. Anscombe 데이터셋 4종 시각화
 
 
 ~~~{.r}
@@ -219,78 +254,12 @@ p4 <- ggplot(anscombe) + geom_point(aes(x4, y4), color = "darkorange", size = 3)
 grid.arrange(p1, p2, p3, p4, ncol=2, top = "Anscombe's Quartet")
 ~~~
 
-<img src="fig/anscombe-quartet-1.png" style="display: block; margin: auto;" />
-
-## 2. 시각화 [^tamara] 
-
-컴퓨터를 기반으로 한 시각화 시스템은 시각적으로 데이터를 표현함으로 인해서 
-사람들이 작업을 더욱 효율적으로 수행할 수 있도록 돕는다.
-
-여기서 시각화가 적합한 상황은 인공지능 및 전사화를 통해 사람을 대체하기 보다는 인간능력을 증강시키는데 유용하다.
-따라서, 완전 자동화 해결책이 존재하고 신뢰성이 있는 경우 시각화가 그다지 필요하지는 않는다.
-또한, 많은 분석문제에는 어떤 질문을 던져야 되는지 사전에 알고 있는 경우가 적어, 명세가 분명하지 않는 경우가 있는데,
-이런 목적에 유용하다.
-
-> ### 시각화 {.callout}
-> 
-> "Computer-based visualization systems provide visual representations of datasets
- designed to help people carry out tasks more effectively" -- Tamara Munzner
+<img src="fig/viz-motivation-quartet-1.png" style="display: block; margin: auto;" />
 
 
-[^tamara]: [Tamara Munzner. Visualization Analysis and Design. A K Peters Visualization Series, CRC Press, 2014](http://www.cs.ubc.ca/~tmm/vadbook/)
+### 1.3. 시각화 분석 얼개 구성요소 [^tamara-ieee]
 
-### 2.1. 시각화가 왜 필요한가?
-
-**인지부하(cognitive load)**를 **시각적 지각(perception)**으로 바꿔 해당 작업을 더욱 효과적으로 처리하는데 시각화를 사용한다.
-
-
-~~~{.r}
-library(datasets)
-women
-~~~
-
-
-
-~~~{.output}
-   height weight
-1      58    115
-2      59    117
-3      60    120
-4      61    123
-5      62    126
-6      63    129
-7      64    132
-8      65    135
-9      66    139
-10     67    142
-11     68    146
-12     69    150
-13     70    154
-14     71    159
-15     72    164
-
-~~~
-
-`women` 데이터가 정렬이 되어 있어서, 신장이 커짐에 따라 체중이 증가하는 것을 알 수 있지만, 데이터만 보고 이해하려면
-인지적으로 데이터 한줄을 읽고 머리속으로 생각하고, 두번째 줄을 읽고 생각하고, ... 이런 과정을 반복하면서 인지적 부하가 증가하게 된다.
-하지만, 시각적으로 표현하게 되면 한눈에 신장과 체중 관계를 볼 수 있다.
-
-
-~~~{.r}
-women %>% ggplot(aes(y=weight, x=height)) + geom_point(color='blue', size=2) +
-  geom_smooth(color='pink')
-~~~
-
-
-
-~~~{.output}
-`geom_smooth()` using method = 'loess'
-
-~~~
-
-<img src="fig/unnamed-chunk-5-1.png" style="display: block; margin: auto;" />
-
-### 2.2. 시각화 분석 얼개 구성요소
+[^tamara-ieee]: [Munzner, Tamara. "A nested model for visualization design and validation." Visualization and Computer Graphics, IEEE Transactions on 15.6 (2009): 921-928.](http://www.cs.ubc.ca/~tmm/talks/iv09/nestedmodel-4x4.pdf)
 
 시각화 분석 얼개는 4가지 부분으로 구성된다. 
 
@@ -306,11 +275,10 @@ women %>% ggplot(aes(y=weight, x=height)) + geom_point(color='blue', size=2) +
 - 알고리즘
 	+ 효율적 연산방법    	
 
-[Munzner, Tamara. "A nested model for visualization design and validation." Visualization and Computer Graphics, IEEE Transactions on 15.6 (2009): 921-928.](http://www.cs.ubc.ca/~tmm/talks/iv09/nestedmodel-4x4.pdf)
 
 <img src="fig/viz-framework.png" alt="RStudio" width="77%" />
 
-### 2.3. 시각화 분석 접근방향
+### 1.4. 시각화 분석 접근방향
 
 시각화 시스템 실행시간, 메모리 사용량 등을 측정하고, 연산 복잡성을 분석하는 알고리즘 작업은 컴퓨터 과학자의 몫이다.
 여러가지 대안 시스템 아키텍처를 정당화하고 시각적 인코딩 방법과 상호작용하는 표현양식을 설계하는 것은 시스템 설계자의 몫이다.
@@ -327,19 +295,28 @@ women %>% ggplot(aes(y=weight, x=height)) + geom_point(color='blue', size=2) +
 > - **선언형(declarative)**: "무엇(what)"에 초점, D3, ggplot2, Protovis 
 
 
-## 3. R 시각화 시스템 [^coursera-r-plotting-system]
+## 2. R 시각화 시스템 [^coursera-r-plotting-system]
 
 [^coursera-r-plotting-system]: [코세라 Lecture 10 - Plotting Systems in R](https://www.coursera.org/learn/exploratory-data-analysis/lecture/MTRt4/plotting-systems-in-r)
 
 R에는 다양한 시각화 관련 시스템이 존재하지만, 가장 대표적으로 3가지 시각화 시스템을 이해하면 실무적으로 충분하다.
 
 - Base 시각화 시스템
-- `lattice` 시각화 시스템
-- `ggplot` 시각화 시스템
+- `lattice` 시각화 시스템: Cleveland의 **Trellis Graphics**에서 출발
+- `ggplot` 시각화 시스템: Wilkinson의 **Grammar of Graphics**에서 출발
+
+2017년 3월 기준 R 팩키지를 시각화 시스템으로 구분하면 다음과 같다.
+
+|  시각화 시스템  |   팩키지 갯수   |
+|:---------------:|:---------------:|
+|Base 시각화      |      5,612       |
+|`lattice` 시각화 |      3,654       |
+|`ggplot` 시각화  |      1,566       |
+
 
 ### 3.1. Base 시각화 시스템
 
-R설치하면 내장된 Base 시각화 시스템은 **화가의 팔레트(Artist's Palallete)** 모형으로 빈 도화지 캔바스 위에 화가가 그림을 그리는 것과 동일한 방식으로 시각화 산출물을 만들어 나간다.
+R설치하면 내장된 Base 시각화 시스템은 **화가의 팔레트(Artist Palallete)** 모형으로 빈 도화지 캔바스 위에 화가가 그림을 그리는 것과 동일한 방식으로 시각화 산출물을 만들어 나간다.
 `plot()` 혹은 유사한 시각화 함수로 시작해서 텍스트(`text`), 선(`line`), 점(`point`), 축(`axis`) 등을 표현하는데  **주석(Annotation)** 함수를 활용한다.
 
 따라서, 사람이 사고하는 방식으로 시각화 산출물을 만들어 나가 편리하지만, 시각화 산출물을 다시 그리려고 하면 처음부터 다시 해야 되기 때문에 시각화 산출물을 
@@ -349,12 +326,11 @@ R설치하면 내장된 Base 시각화 시스템은 **화가의 팔레트(Artist
 
 ~~~{.r}
 #1. Base 시각화 시스템----------------------------------------------------------------
-library(datasets)
 data(mtcars)
 with(mtcars, plot(disp, mpg))
 ~~~
 
-<img src="fig/unnamed-chunk-6-1.png" style="display: block; margin: auto;" />
+<img src="fig/viz-base-1.png" style="display: block; margin: auto;" />
 
 ### 3.2. `lattice` 시각화 시스템
 
@@ -365,15 +341,17 @@ with(mtcars, plot(disp, mpg))
 하지만, 함수호출 한번으로 전체 시각화 산출물을 명세하는 것이 쉽지는 않다. 특히 주석(Annotation)을 시각화 산출물에 다는 것이 그다지 직관적이는 않다.
 그리고 `lattice` 함수를 통해 시각화 산출물이 만들어지면 더이상 추가는 불가하다.
 
+[키보드 자판으로 통계모형을 R로 표현하는 방법](https://statkclee.github.io/statistics/stat-modeling.html)처럼 변수들을 `lattice` 시각화 시스템에서 
+공식으로 표현할 수 있다는 점은 큰 장점중 하나다.
+
 
 
 ~~~{.r}
 #2. Lattice 시각화 시스템----------------------------------------------------------------
-# library(lattice)
 xyplot(mpg ~ disp | am, data=mtcars, layout=c(2,1))
 ~~~
 
-<img src="fig/unnamed-chunk-7-1.png" style="display: block; margin: auto;" />
+<img src="fig/viz-lattice-1.png" style="display: block; margin: auto;" />
 
 ### 3.3. `ggplot` 시각화 시스템
 
@@ -390,7 +368,7 @@ ggplot(data=mtcars, mapping=aes(x=disp, y=mpg)) +
   geom_smooth(method="lm", se=FALSE)
 ~~~
 
-<img src="fig/unnamed-chunk-8-1.png" style="display: block; margin: auto;" />
+<img src="fig/viz-ggplot-1.png" style="display: block; margin: auto;" />
 
 ### 3.4. `grid` 시각화 시스템
 
@@ -404,7 +382,6 @@ grid_0.7-4에서 [Base 팩키지 일부](https://stat.ethz.ch/R-manual/R-devel/l
 
 
 ~~~{.r}
-library(grid)
 x <- mtcars$disp
 y <- mtcars$mpg
 
@@ -419,4 +396,4 @@ grid.text("mtcars$mpg", y = unit(-3, "lines"), rot = 0)
 popViewport(2)
 ~~~
 
-<img src="fig/unnamed-chunk-9-1.png" style="display: block; margin: auto;" />
+<img src="fig/viz-grid-1.png" style="display: block; margin: auto;" />
