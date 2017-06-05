@@ -1,9 +1,10 @@
 ---
 layout: page
-title: 데이터 과학
-subtitle: ggvis
+title: 데이터 과학 - 시각화
+subtitle: ggvis = 웹브라우져 기능(Vega/D3) + ggplot
 output:
   html_document: 
+    toc: yes
     keep_md: yes
   pdf_document:
     latex_engine: xelatex
@@ -12,7 +13,7 @@ mainfont: NanumGothic
 
 ```{r  include = FALSE}
 source("tools/chunk-options.R")
-knitr::opts_chunk$set(error = TRUE)
+knitr::opts_chunk$set(error = TRUE, warning = FALSE, message = FALSE)
 ```
 
 ### 1. `ggvis` 개요 
@@ -120,8 +121,8 @@ mtcars %>%
         fill = ~factor(cyl))  %>%
   layer_points() %>%
   add_legend(c("fill"), title="실린더 유형") %>%
-  add_axis("x", title = "Weight(차체 중량)")
-  add_axis("y", title = "연비(mpg")
+  add_axis("x", title = "Weight(차체 중량)")  %>%
+  add_axis("y", title = "연비(mpg)")
 ```
 
 ### 5. `ggvis` 척도(scale)
