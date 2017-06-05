@@ -56,7 +56,7 @@ $$
 
 
 <!-- html table generated in R 3.4.0 by xtable 1.8-2 package -->
-<!-- Fri Jun  2 14:00:57 2017 -->
+<!-- Mon Jun  5 10:18:49 2017 -->
 <table border=1>
 <tr> <th> color_name </th> <th> hex </th> <th> red </th> <th> green </th> <th> blue </th>  </tr>
   <tr> <td> blue </td> <td> #0000FF </td> <td align="right"> 0 </td> <td align="right"> 0 </td> <td align="right"> 255 </td> </tr>
@@ -69,7 +69,7 @@ $$
 
 
 <!-- html table generated in R 3.4.0 by xtable 1.8-2 package -->
-<!-- Fri Jun  2 14:00:58 2017 -->
+<!-- Mon Jun  5 10:18:49 2017 -->
 <table border=1>
 <tr> <th> color_name </th> <th> hex </th> <th> red </th> <th> green </th> <th> blue </th>  </tr>
   <tr> <td> white, gray100 </td> <td> #FFFFFF </td> <td align="right"> 255 </td> <td align="right"> 255 </td> <td align="right"> 255 </td> </tr>
