@@ -1,0 +1,257 @@
+# 데이터 과학
+
+
+
+
+## 1. 시계열 데이터 시각화
+
+`ggplot2` 그래프 문법 방식이 많이 시각화에 사용되고 있지만, R Base 시각화 시스템도 유구한 역사속에 
+두터운 사용자 층을 확보하고 있고 검증된 다수 시각화 팩키지와 함수를 제공하고 있다. 시계열도 예외는 아니다.
+
+### 1.1. 데이터 가져오기
+
+시계열 데이터를 시각화하는데 필요한 표본 데이터를 불러온다.
+제 19 대 대통령 선거에서 다양한 여론조사 업체에서 수집된 정보를 [나무위키](https://namu.wiki/w/%EC%A0%9C19%EB%8C%80%20%EB%8C%80%ED%86%B5%EB%A0%B9%20%EC%84%A0%EA%B1%B0/%EC%97%AC%EB%A1%A0%EC%A1%B0%EC%82%AC)에서
+긁어와서 이를 분석에 사용한다. 
+
+4개 여론조사업체 중 pdf 파일도 잘 정리해서 제공하고 있는 리얼미터(MBN·매일경제·CBS가 의뢰하여 리얼미터에서 조사한 2017년 대선주자 지지도 주간집계 결과임) 제공 데이터를 활용한다.
+
+
+~~~{.r}
+# 0. 환경설정 --------------------------------------------------
+#library(tidyverse)
+#library(rvest)
+#library(stringr)
+#library(xts)
+#library(TTR)
+#library(PerformanceAnalytics)
+#library(corrplot)
+
+# 1. 데이터 가져오기 ------------------------------------------
+
+namu_url <- "https://namu.wiki/w/%EC%A0%9C19%EB%8C%80%20%EB%8C%80%ED%86%B5%EB%A0%B9%20%EC%84%A0%EA%B1%B0/%EC%97%AC%EB%A1%A0%EC%A1%B0%EC%82%AC"
+namu_html <- read_html(namu_url, encoding="UTF-8")
+
+# Sys.setlocale("LC_ALL", "Korean")
+
+real_tbl <- html_table(namu_html) [[8]]
+
+# 2. 데이터 정제 ------------------------------------------
+
+## 2.2. 리얼미터 ----------------------------
+names(real_tbl) <- real_tbl[1,]
+real_tbl <- real_tbl %>% dplyr::select(`주차`, `문재인`, `홍준표`, `안철수`, `유승민`, `심상정`)
+
+real_df <- real_tbl %>% dplyr::filter(stringr::str_detect(real_tbl$주차, pattern="[0-9]{1}[월]")) %>%
+  gather(후보, 지지율, -주차) %>% 
+  mutate(`지지율` = str_replace_all(`지지율`, "%", "")) %>%
+  mutate(`지지율` = as.numeric(`지지율`)) %>% 
+  mutate(조사업체 = "리얼미터")
+
+write_csv(real_df, "data/survey_real.csv")
+~~~
+
+### 1.2. 문재인 vs. 안철수
+
+제19대 대통령선거에서 가장 관심을 많이 받은 후보가 문재인과 안철수 후보다.
+두 후보에 대한 지지율 변화를 시계열 데이터로 변환하여 시각화한다.
+
+가장 먼저 "1월 1주차"와 같은 문자열 정보를 시계열 데이터로 변환시키고 나서,
+`xts` 자료형으로 변환시킨다. 그리고 시계열 흐름에 맞춰 여러 정보를 그래프 한장에 압축하여 담백하게 담아낸다.
+
+
+~~~{.r}
+## 3. 데이터 변환 ----------------------------
+
+real_df <- real_dat %>% mutate(week = rep(seq(1:(dim(real_dat)[1]/5)), 5)) %>% 
+  mutate(weeks = as.Date(paste("1", week, "2017", sep = "-"), format = "%w-%W-%Y")) %>%
+  dplyr::select(weeks, 후보, 지지율)
+
+real_wide_df <- real_df %>% tidyr::spread(`후보`, `지지율`)
+
+real_xts <- xts(real_wide_df[,-1], order.by = real_wide_df$weeks)
+
+# 4. 시각화 ----------------------------
+## 4.1. 문재인 vs 안철수
+plot(real_xts$`문재인`, main="문재인 지지율", col="blue", minor.ticks=FALSE, ylim=c(0,50))
+lines(real_xts$`안철수`, col="green", lwd=2)
+axis(side=4, at=pretty(real_xts$`안철수`), col="green")
+
+legend(x = "bottomright", 
+       legend = c("문재인", "안철수"), 
+       col = c("blue","green"), 
+       lty = c(1,1))
+~~~
+
+<img src="fig/viz-time-series-prologue-1.png" style="display: block; margin: auto;" />
+
+~~~{.r}
+## 4.2. 문재인 vs 안철수 접전
+period <- c("2017-03-27/2017-04-10")
+par(cex=1)
+chart.TimeSeries(real_xts$문재인, period.areas = period, col="blue", ylim=c(0,50), main="문재인 vs 안철수", ylab="지지율(%)")
+par(new=TRUE)
+chart.TimeSeries(real_xts$`안철수`, col="green", minor.ticks=FALSE, ylim=c(0,50), main="", ylab="")
+axis(side=2, at=pretty(real_xts$`문재인`), col="blue")
+axis(side=4, at=pretty(real_xts$`안철수`), col="green")
+
+# 주석
+moon_max_date <- index(real_xts[which(real_xts$문재인 == max(real_xts$문재인))])
+ahn_max_date <- index(real_xts[which(real_xts$안철수 == max(real_xts$안철수))])
+moon <- paste0("문재인 최고 지지율(", moon_max_date, "): ", max(real_xts$문재인), "%")
+ahn <- paste0("안철수 최고 지지율(", ahn_max_date, "): ", max(real_xts$안철수), "%")
+
+legend(x = "bottomright", 
+       legend = c(moon, ahn), 
+       col = c("blue","green"), 
+       lty = c(1,1), cex=0.7)
+~~~
+
+<img src="fig/viz-time-series-prologue-2.png" style="display: block; margin: auto;" />
+
+## 단변량 시계열 분석
+
+시간별 지지율흐름을 살펴본 후에 지지율 변화율을 살펴보는 것도 의미가 크다.
+후보별 지지율 시계열 데이터에 대한 변화율을 분석할 경우,
+히스토그램, 상자그림, 자기상관함수, 정규성 검정이 사용된다.
+이를 각각 시각화하여 살펴보는 것보다 한장의 그래프로 표현하는 방법을 많이 사용한다.
+
+
+
+~~~{.r}
+# 3. 시각화 ----------------------------
+## 3.1. 문재인 지지율 변화율
+
+real_xts$문재인rtn <- ROC(real_xts$문재인)
+real_xts$안철수rtn <- ROC(real_xts$안철수)
+
+par(mfrow=c(2,2), cex=0.7)
+
+hist(real_xts$문재인rtn, probability=TRUE, main="지지율 변동율")
+lines(density(real_xts$문재인rtn, na.rm=TRUE), col="red")
+
+boxplot(coredata(real_xts$문재인rtn))
+
+acf(na.omit(coredata(real_xts$문재인rtn)), main="지지율 자기상관")
+
+qqnorm(coredata(real_xts$문재인rtn), main="지지율 정규분포")
+qqline(coredata(real_xts$문재인rtn), col="red")
+~~~
+
+<img src="fig/viz-time-series-univariate-1.png" style="display: block; margin: auto;" />
+
+~~~{.r}
+## 3.2. 지지율 변화 함수
+change_rate <- function(xts_df) {
+  par(mfrow=c(2,2), cex=1, mex=0.7)
+  hist(xts_df, probability=TRUE, main=paste(names(xts_df), "지지율 변동율"), xlab="", ylab="")
+  lines(density(xts_df, na.rm=TRUE), col="red")
+  
+  boxplot(coredata(xts_df), main="지지율 상자그림", xlab="", ylab="")
+  
+  acf(na.omit(coredata(xts_df)), main="지지율 자기상관", xlab="", ylab="")
+  
+  qqnorm(coredata(xts_df), main="지지율 정규분포 검정", xlab="", ylab="")
+  qqline(coredata(xts_df), col="red")
+}
+
+change_rate(ROC(real_xts$홍준표))
+~~~
+
+<img src="fig/viz-time-series-univariate-2.png" style="display: block; margin: auto;" />
+
+~~~{.r}
+change_rate(ROC(real_xts$안철수))
+~~~
+
+<img src="fig/viz-time-series-univariate-3.png" style="display: block; margin: auto;" />
+
+~~~{.r}
+change_rate(ROC(real_xts$유승민))
+~~~
+
+<img src="fig/viz-time-series-univariate-4.png" style="display: block; margin: auto;" />
+
+~~~{.r}
+change_rate(ROC(real_xts$심상정))
+~~~
+
+<img src="fig/viz-time-series-univariate-5.png" style="display: block; margin: auto;" />
+
+
+## 다변량 시계열 분석
+
+단변량 시계열 분석을 수행한 후에 변수간의 관계를 살펴봐야 한다.
+이를 위해 피어슨 상관계수를 비롯한 다양한 상관계수를 활용하여 변수들간의 유의미한 관계를 도출해 낸다.
+통계량과는 별도로 시각화를 위해서 `pairs()` 함수를 사용하기도 하나 `corrplot()` 함수를 
+
+- `pairs()`
+- `corrplot()`
+
+상관계수를 계산할 때 결측값이 존재하기 때문에 `use = "complete.obs"` 인자를 넣어주어야 하고,
+기본디폴트 설정은 피어스 상관계수가 후보 지지율 간에 계산된다.
+
+회귀계수 정보를 바탕으로 추가적인 분석이 가능한데 대표적인 것이 `hclust`를 이용하여 후보를 유사한 군집으로 묶을 수 있다는 점이다.
+3개 군집으로 묶을 경우 유승민, 안철수-문재인, 홍준표-심상정으로 묶이는 것이 데이터를 통해 확인된다.
+
+
+~~~{.r}
+real_xts <- real_xts[, 1:5]
+
+(real_cor_mat <- cor(real_xts, use = "complete.obs"))
+~~~
+
+
+
+~~~{.output}
+          문재인    심상정    안철수    유승민    홍준표
+문재인 1.0000000 0.7619536 0.8654253 0.4157061 0.8000071
+심상정 0.7619536 1.0000000 0.5169423 0.5964046 0.9128631
+안철수 0.8654253 0.5169423 1.0000000 0.1420244 0.6018729
+유승민 0.4157061 0.5964046 0.1420244 1.0000000 0.4122640
+홍준표 0.8000071 0.9128631 0.6018729 0.4122640 1.0000000
+
+~~~
+
+
+
+~~~{.r}
+# pairs(coredata(real_xts), lower.panel=NULL)
+
+corrplot(real_cor_mat, method="number", type="upper")
+~~~
+
+<img src="fig/viz-time-series-multivariate-1.png" style="display: block; margin: auto;" />
+
+~~~{.r}
+corrplot(real_cor_mat, order="hclust", addrect=3)
+~~~
+
+<img src="fig/viz-time-series-multivariate-2.png" style="display: block; margin: auto;" />
+
+## 후보별 누적 지지율
+
+앞서 후보를 3개 군집으로 묶어 문재인, 안철수로 묶인 군집내부 누적 지지율 추이를 살펴보고, 동일한 방식으로 
+홍준표, 유승민 후보에 대한 누적 지지율 추이도 살펴보고 나서, 전체 후보에 대한 누적 지지율 추이도 살펴본다.
+
+
+~~~{.r}
+## 3.2. 누적 지지율 추이
+real_rtn_xts <- do.call(cbind, lapply(real_xts, TTR::ROC))
+
+charts.PerformanceSummary(real_rtn_xts[5:18, c(1,3)], main="문재인, 안철수 누적지지율", colorset=c("blue", "green"))
+~~~
+
+<img src="fig/viz-time-series-multivariate-performance-1.png" style="display: block; margin: auto;" />
+
+~~~{.r}
+charts.PerformanceSummary(real_rtn_xts[5:18, c(4,5)], main="홍준표, 유승민 누적지지율", colorset=c("lightblue", "red"), lwd=2)
+~~~
+
+<img src="fig/viz-time-series-multivariate-performance-2.png" style="display: block; margin: auto;" />
+
+~~~{.r}
+charts.PerformanceSummary(real_rtn_xts[5:18], main="전체 후보 누적지지율", colorset=c("blue", "yellow", "green", "lightblue", "red"), lwd=2)
+~~~
+
+<img src="fig/viz-time-series-multivariate-performance-3.png" style="display: block; margin: auto;" />

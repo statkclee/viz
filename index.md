@@ -29,6 +29,7 @@ title: 데이터 과학 -- 시각화
     - [R 시각화 카탈로그](http://shiny.stat.ubc.ca/r-graph-catalog/)
     - [ggvis = 웹브라우져 기능(Vega/D3) + ggplot](viz-ggvis.html)
     - [`lattice` - 격자그림(Trellis Graphics)](viz-trellis.html)
+    - [단변량/다변량 시계열 데이터](viz-time-series.html)
 
 ### [xwMOOC 오픈 교재](https://statkclee.github.io/xwMOOC/)
 
