@@ -19,12 +19,14 @@ library(gridExtra)
 library(lattice)
 library(DT)
 library(grid)
+library(datasauRus)
 ````
 
 
 > ## 학습 목표  {.objectives}
 >
 > * Anscombe 데이터를 통해 데이터 시각화의 중요성을 이해한다.
+> * Anscombe 데이터를 현대적으로 각색한 `datasauRus`도 살펴본다.
 > * 시각화 얼개를 통한 시각화를 목적과 방향을 탐색한다.
 > * 시각화 산출물을 만들어내는 3가지 R 시각화 시스템을 살펴본다.
 
@@ -281,4 +283,41 @@ grid.points(x, y)
 grid.text("mtcars$disp", x = unit(-3, "lines"), rot = 90)
 grid.text("mtcars$mpg", y = unit(-3, "lines"), rot = 0)
 popViewport(2)
+```
+
+## 3. 데이터공룡(datasauRus) [^acm-chi-2017]
+
+[^acm-chi-2017]: [Justin Matejka and George Fitzmaurice(2017), Same Stats, Different Graphs: Generating Datasets with Varied Appearance and Identical Statistics through Simulated Annealing, ACM SIGCHI Conference on Human Factors in Computing Systems](https://www.autodeskresearch.com/publications/samestats)
+
+데이터 공룡이 탄생하는데 지대한 공헌을 한 도구는 [DrawMyData](http://robertgrantstats.co.uk/drawmydata.html) 웹사이트로
+$\mu_x$ 평균, $\mu_y$ 평균, $\sigma_x$ 표준편차, $\sigma_y$ 표준편차, $\rho_{xy}$ 상관계수는 
+[Download the Datasaurus: Never trust summary statistics alone; always visualize your data](http://www.thefunctionalart.com/2016/08/download-datasaurus-never-trust-summary.html) 사이트에서 확인이 가능하다.
+
+<img src="fig/AllDinosAnimatedSmaller.gif" alt="데이터 공룡 애니메이션" width="97%" />
+
+Anscombe 4종류 데이터에 버금가는 데이터공룡(Datasaurus)은 그 다음에 Justin Matejka와 George Fitzmaurice 공동으로 저술한 논문 
+[Same Stats, Different Graphs: Generating Datasets with Varied Appearance and Identical Statistics through Simulated Annealing](https://www.autodeskresearch.com/publications/samestats)으로 
+출간된 다음에 매우 유명해진다. 
+
+그리고 나서, [datasauRus](https://github.com/stephlocke/datasauRus) R 팩키지가 전혀 다른 사람들을 통해 만들어지게 된다. 이러한 일련의 과정을 보면서 전세계적으로 불고 있는 
+혁신의 바람과 속도가 엄청나다는 것에 감탄이 절로 난다.
+$\mu_x$ 평균, $\mu_y$ 평균, $\sigma_x$ 표준편차, $\sigma_y$ 표준편차, $\rho_{xy}$ 상관계수가 소수점아래 두자리에서 동일하다.
+
+``` {r viz-datasaurus, warning=FALSE, message=FALSE}
+# library(datasauRus)
+datasaurus_dozen %>% 
+    group_by(dataset) %>% 
+    summarize(
+        mean_x    = mean(x),
+        mean_y    = mean(y),
+        std_dev_x = sd(x),
+        std_dev_y = sd(y),
+        corr_x_y  = cor(x, y)
+    )
+
+ggplot(datasaurus_dozen, aes(x=x, y=y, colour=dataset))+
+    geom_point()+
+    theme_void()+
+    theme(legend.position = "none")+
+    facet_wrap(~dataset, ncol=4)
 ```

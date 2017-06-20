@@ -6,6 +6,7 @@
 > ## 학습 목표  {.objectives}
 >
 > * Anscombe 데이터를 통해 데이터 시각화의 중요성을 이해한다.
+> * Anscombe 데이터를 현대적으로 각색한 `datasauRus`도 살펴본다.
 > * 시각화 얼개를 통한 시각화를 목적과 방향을 탐색한다.
 > * 시각화 산출물을 만들어내는 3가지 R 시각화 시스템을 살펴본다.
 
@@ -45,8 +46,8 @@
 datatable(women)
 ~~~
 
-<!--html_preserve--><div id="htmlwidget-1e89c0c17804b4655d57" style="width:100%;height:auto;" class="datatables html-widget"></div>
-<script type="application/json" data-for="htmlwidget-1e89c0c17804b4655d57">{"x":{"filter":"none","data":[["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15"],[58,59,60,61,62,63,64,65,66,67,68,69,70,71,72],[115,117,120,123,126,129,132,135,139,142,146,150,154,159,164]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>height<\/th>\n      <th>weight<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"crosstalkOptions":{"key":null,"group":null},"columnDefs":[{"className":"dt-right","targets":[1,2]},{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false},"selection":{"mode":"multiple","selected":null,"target":"row"}},"evals":[],"jsHooks":[]}</script><!--/html_preserve-->
+<!--html_preserve--><div id="htmlwidget-84eec0c382bb72ea4cf5" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-84eec0c382bb72ea4cf5">{"x":{"filter":"none","data":[["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15"],[58,59,60,61,62,63,64,65,66,67,68,69,70,71,72],[115,117,120,123,126,129,132,135,139,142,146,150,154,159,164]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>height<\/th>\n      <th>weight<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"crosstalkOptions":{"key":null,"group":null},"columnDefs":[{"className":"dt-right","targets":[1,2]},{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false},"selection":{"mode":"multiple","selected":null,"target":"row"}},"evals":[],"jsHooks":[]}</script><!--/html_preserve-->
 
 `women` 데이터가 정렬이 되어 있어서, 신장이 커짐에 따라 체중이 증가하는 것을 알 수 있지만, 데이터만 보고 이해하려면
 인지적으로 데이터 한줄을 읽고 머리속으로 생각하고, 두번째 줄을 읽고 생각하고, ... 이런 과정을 반복하면서 인지적 부하가 증가하게 된다.
@@ -89,8 +90,8 @@ data(anscombe)
 datatable(anscombe) 
 ~~~
 
-<!--html_preserve--><div id="htmlwidget-df2e66601df2d0148994" style="width:100%;height:auto;" class="datatables html-widget"></div>
-<script type="application/json" data-for="htmlwidget-df2e66601df2d0148994">{"x":{"filter":"none","data":[["1","2","3","4","5","6","7","8","9","10","11"],[10,8,13,9,11,14,6,4,12,7,5],[10,8,13,9,11,14,6,4,12,7,5],[10,8,13,9,11,14,6,4,12,7,5],[8,8,8,8,8,8,8,19,8,8,8],[8.04,6.95,7.58,8.81,8.33,9.96,7.24,4.26,10.84,4.82,5.68],[9.14,8.14,8.74,8.77,9.26,8.1,6.13,3.1,9.13,7.26,4.74],[7.46,6.77,12.74,7.11,7.81,8.84,6.08,5.39,8.15,6.42,5.73],[6.58,5.76,7.71,8.84,8.47,7.04,5.25,12.5,5.56,7.91,6.89]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>x1<\/th>\n      <th>x2<\/th>\n      <th>x3<\/th>\n      <th>x4<\/th>\n      <th>y1<\/th>\n      <th>y2<\/th>\n      <th>y3<\/th>\n      <th>y4<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"crosstalkOptions":{"key":null,"group":null},"columnDefs":[{"className":"dt-right","targets":[1,2,3,4,5,6,7,8]},{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false},"selection":{"mode":"multiple","selected":null,"target":"row"}},"evals":[],"jsHooks":[]}</script><!--/html_preserve-->
+<!--html_preserve--><div id="htmlwidget-7d1a1d9d89fce5d4ddb9" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-7d1a1d9d89fce5d4ddb9">{"x":{"filter":"none","data":[["1","2","3","4","5","6","7","8","9","10","11"],[10,8,13,9,11,14,6,4,12,7,5],[10,8,13,9,11,14,6,4,12,7,5],[10,8,13,9,11,14,6,4,12,7,5],[8,8,8,8,8,8,8,19,8,8,8],[8.04,6.95,7.58,8.81,8.33,9.96,7.24,4.26,10.84,4.82,5.68],[9.14,8.14,8.74,8.77,9.26,8.1,6.13,3.1,9.13,7.26,4.74],[7.46,6.77,12.74,7.11,7.81,8.84,6.08,5.39,8.15,6.42,5.73],[6.58,5.76,7.71,8.84,8.47,7.04,5.25,12.5,5.56,7.91,6.89]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>x1<\/th>\n      <th>x2<\/th>\n      <th>x3<\/th>\n      <th>x4<\/th>\n      <th>y1<\/th>\n      <th>y2<\/th>\n      <th>y3<\/th>\n      <th>y4<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"crosstalkOptions":{"key":null,"group":null},"columnDefs":[{"className":"dt-right","targets":[1,2,3,4,5,6,7,8]},{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false},"selection":{"mode":"multiple","selected":null,"target":"row"}},"evals":[],"jsHooks":[]}</script><!--/html_preserve-->
 
 ~~~{.r}
 # x1, x2, x3, x4 평균
@@ -397,3 +398,69 @@ popViewport(2)
 ~~~
 
 <img src="fig/viz-grid-1.png" style="display: block; margin: auto;" />
+
+## 3. 데이터공룡(datasauRus) [^acm-chi-2017]
+
+[^acm-chi-2017]: [Justin Matejka and George Fitzmaurice(2017), Same Stats, Different Graphs: Generating Datasets with Varied Appearance and Identical Statistics through Simulated Annealing, ACM SIGCHI Conference on Human Factors in Computing Systems](https://www.autodeskresearch.com/publications/samestats)
+
+데이터 공룡이 탄생하는데 지대한 공헌을 한 도구는 [DrawMyData](http://robertgrantstats.co.uk/drawmydata.html) 웹사이트로
+$\mu_x$ 평균, $\mu_y$ 평균, $\sigma_x$ 표준편차, $\sigma_y$ 표준편차, $\rho_{xy}$ 상관계수는 
+[Download the Datasaurus: Never trust summary statistics alone; always visualize your data](http://www.thefunctionalart.com/2016/08/download-datasaurus-never-trust-summary.html) 사이트에서 확인이 가능하다.
+
+<img src="fig/AllDinosAnimatedSmaller.gif" alt="데이터 공룡 애니메이션" width="97%" />
+
+Anscombe 4종류 데이터에 버금가는 데이터공룡(Datasaurus)은 그 다음에 Justin Matejka와 George Fitzmaurice 공동으로 저술한 논문 
+[Same Stats, Different Graphs: Generating Datasets with Varied Appearance and Identical Statistics through Simulated Annealing](https://www.autodeskresearch.com/publications/samestats)으로 
+출간된 다음에 매우 유명해진다. 
+
+그리고 나서, [datasauRus](https://github.com/stephlocke/datasauRus) R 팩키지가 전혀 다른 사람들을 통해 만들어지게 된다. 이러한 일련의 과정을 보면서 전세계적으로 불고 있는 
+혁신의 바람과 속도가 엄청나다는 것에 감탄이 절로 난다.
+$\mu_x$ 평균, $\mu_y$ 평균, $\sigma_x$ 표준편차, $\sigma_y$ 표준편차, $\rho_{xy}$ 상관계수가 소수점아래 두자리에서 동일하다.
+
+
+~~~{.r}
+# library(datasauRus)
+datasaurus_dozen %>% 
+    group_by(dataset) %>% 
+    summarize(
+        mean_x    = mean(x),
+        mean_y    = mean(y),
+        std_dev_x = sd(x),
+        std_dev_y = sd(y),
+        corr_x_y  = cor(x, y)
+    )
+~~~
+
+
+
+~~~{.output}
+# A tibble: 13 x 6
+      dataset   mean_x   mean_y std_dev_x std_dev_y    corr_x_y
+        <chr>    <dbl>    <dbl>     <dbl>     <dbl>       <dbl>
+ 1       away 54.26610 47.83472  16.76982  26.93974 -0.06412835
+ 2   bullseye 54.26873 47.83082  16.76924  26.93573 -0.06858639
+ 3     circle 54.26732 47.83772  16.76001  26.93004 -0.06834336
+ 4       dino 54.26327 47.83225  16.76514  26.93540 -0.06447185
+ 5       dots 54.26030 47.83983  16.76774  26.93019 -0.06034144
+ 6    h_lines 54.26144 47.83025  16.76590  26.93988 -0.06171484
+ 7 high_lines 54.26881 47.83545  16.76670  26.94000 -0.06850422
+ 8 slant_down 54.26785 47.83590  16.76676  26.93610 -0.06897974
+ 9   slant_up 54.26588 47.83150  16.76885  26.93861 -0.06860921
+10       star 54.26734 47.83955  16.76896  26.93027 -0.06296110
+11    v_lines 54.26993 47.83699  16.76996  26.93768 -0.06944557
+12 wide_lines 54.26692 47.83160  16.77000  26.93790 -0.06657523
+13    x_shape 54.26015 47.83972  16.76996  26.93000 -0.06558334
+
+~~~
+
+
+
+~~~{.r}
+ggplot(datasaurus_dozen, aes(x=x, y=y, colour=dataset))+
+    geom_point()+
+    theme_void()+
+    theme(legend.position = "none")+
+    facet_wrap(~dataset, ncol=4)
+~~~
+
+<img src="fig/viz-datasaurus-1.png" style="display: block; margin: auto;" />
