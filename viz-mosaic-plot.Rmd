@@ -32,10 +32,14 @@ par(family = 'NanumGothic')
 2017년 2월 22일 발표되었다. 
 다양한 그래프를 통해 출생 및 사망에 관한 통계 정보가 공개 되었다. 
 
-## 2. 범주형 데이터 시각화
+## 2. 범주형 데이터 시각화 [^plotcon-2016]
+
+[^plotcon-2016]: [PLOTCON 2016: Haley Jeppson, Visualizing Multivariate Categorical Data](https://www.youtube.com/watch?v=TWr2JuILX74)
 
 그래프 문법(Grammar of Graphics)을 사용한 모자이크 그래프(https://cran.r-project.org/web/packages/ggmosaic/index.html)를 통해 출생에 관한 비밀을 
 시각적으로 풀어보자.
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/TWr2JuILX74" frameborder="0" allowfullscreen></iframe>
 
 ### 2.1. 환경설정
 
