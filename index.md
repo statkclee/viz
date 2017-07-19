@@ -33,6 +33,7 @@ title: 데이터 과학 -- 시각화
     - [점그래프 - 전후변화](viz-prior-posterior.html)
     - [단변량/다변량 시계열 데이터](viz-time-series.html)
     - [범주형 자료 - 모자이크(mosaic): 통계청 출산(2016)](viz-mosaic-plot.html)
+    - [발전 에너지(원자력 포함) - 대응분석(Correspondance Analysis)](viz-mosaic-ca.html)
 
 ### [xwMOOC 오픈 교재](https://statkclee.github.io/xwMOOC/)
 
