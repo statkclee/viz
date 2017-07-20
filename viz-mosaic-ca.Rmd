@@ -33,14 +33,14 @@ loadfonts()
 par(family = 'NanumGothic')
 ```
 
-## 1. 국가별 발전 데이터
+## 1. 국가별 발전 데이터 {#data}
 
 국가별 발전 데이터는 위키피디아 [List of countries by electricity production](https://en.wikipedia.org/wiki/List_of_countries_by_electricity_production) 페이지에서 
 확인할 수 있다. 이 데이터를 바탕으로 각 국가별로 신재생 에너지를 포함하여 다양한 발전에 사용되는 자원에 대해 살펴본다.
 특히, 전기 발전 데이터가 관심을 갖는 이유는 최근 [한국 미세먼지 원인 “국내 52%, 중국 34%”](http://news.kbs.co.kr/news/view.do?ncd=3519126&ref=D) 뉴스에서도 얻급 되었듯이 일상생활과 밀접한 관계가 있기 때문이다.
 
 
-## 2.  국가별 발전 분석
+## 2.  국가별 발전 패턴 분석 {#production-analysis}
 
 국가별 데이터 분석을 위해서 데이터 분석환경을 다음과 같이 설정한다.
 
@@ -50,7 +50,7 @@ par(family = 'NanumGothic')
 - 탐색적 데이터 분석: FactoMineR
 - 범주형 데이터 시각화: ggmosaic
 
-### 2.1. 환경설정
+### 2.1. 환경설정 {#setting}
 
 ``` {r electricity-setup, eval=FALSE}
 # 0. 환경설정 -----------------------------------
@@ -65,7 +65,7 @@ library(FactoMineR)
 loadfonts()
 ```
 
-### 2.2. 데이터 가져오기
+### 2.2. 데이터 가져오기 {#ingest}
 
 [List of countries by electricity production](https://en.wikipedia.org/wiki/List_of_countries_by_electricity_production) 웹페이지에서 
 웹크로링한다. `stringr` 팩키지 함수를 활용하여 문자열 데이터를 숫자형으로 변형하기 위해서 전처리 작업도 함께 병행한다.
@@ -101,9 +101,9 @@ energy_df <- energy %>% filter(country != "Country") %>%
     column_to_rownames(var="country")
 ```
 
-## 3. 국가별 발전 시각화
+## 3. 국가별 발전 시각화 {#mosaic-viz}
 
-### 3.1. 국가별 발전 시각화
+### 3.1. 막대그래프를 활용 비율 시각화 {#stacked-barchart}
 
 우선 원본데이터가 발전량과 각 발전 에너지원별로 나눠져서 있어 이를 `ggplot`을 활용하여 시각화한다. 
 국가별 발전 데이터가 원천별로 퍼센트(%) 비율로 정리되어 있어 바로 쌓은 막대그래프(stacked barchart) geom을 적용하여 시각화한다. 또한, 국가별 발전량을 고려하여 가장 많은 전기를 생산하는 국가부터 정렬하여 순서대로 표현한다.
@@ -130,7 +130,7 @@ energy_df %>%
 
 ```
 
-### 3.2. 국가별 발전량 고려한 시각화
+### 3.2. 모자이크 그래프를 적용한 국가별 발전량 시각화 {#mosaic-viz}
 
 앞선 그래프가 발전량 순서로 정렬하여 표현하였지만, 이를 실제적으로 반영하는데 모자이크 그래프를 활용한다.
 발전량과 비율로 된 것을 실제 발전량으로 변환하여 모자이크 그래프로 시각화하게 되면 한눈에 발전량과 함께 
@@ -161,7 +161,7 @@ energy_actual_df %>%
     guides(fill=guide_legend(title = "에너지", reverse = TRUE))
 ```
 
-## 4. 대응분석
+## 4. 대응분석 {#ca}
 
 대응분석을 통해 1,2차원이 약 60%를 설명하는데 `Dim 1` 차원은 석유와 원자력이 우측에 위치하고 석유가 반대쪽에 위치한 것으로 봐서 **가성비**로 잠정 볼 수 있고, `Dim 2` 차원은 수력과 신재생이 윗쪽에 석유, 석탄, 천연가스가 아래쪽에 위치한 것으로 봐서 **친환경**으로 잠정 볼 수 있다. 특히, 신재생과 열을 이용한 발전합계(subtotal_renewable, subtotal_thermal)이 위와 아래 각각 위치한 것도 차원식별에 도움이 된다.
 
@@ -179,7 +179,7 @@ plot(energy_ca, shadow=TRUE, cex=0.7, title="국가별 에너지 생성 원천")
 plot(energy_ca, axes=c(1,3), shadow=TRUE, cex=0.7, title="국가별 에너지 생성 원천")
 ```
 
-### 4.1. 분석에 사용된 데이터
+### 4.1. 분석에 사용된 데이터 {#ca-table}
 
 `DT` 팩키지를 통해 시각적으로 확인된 사항을 표를 통해 면밀한 검토도 추가로 가능하다.
 
