@@ -8,7 +8,9 @@
 > * 정적 격자그림에 더하여 자바스크립트로 인터랙티브 기능을 추가한 `trelliscopejs`도 있다.
 
 
-## 0. 2017년 19대 대통령 선거 시구군 득표율 및 사회경제지표
+## 0. 2017년 19대 대통령 선거 시구군 득표율 및 사회경제지표 [^bigdata-issue-trend-polinews-17-06-23]
+
+[^bigdata-issue-trend-polinews-17-06-23]: [홍경환 <빅데이터로 보는 이슈&트랜드> 대표(2017-06-23), 호랑이와 늑대가 싸우는 이유…정치와 경쟁적 배제](http://polinews.co.kr/news/article.html?no=318357&sec_no=25)
 
 [제19대 대통령선거 투표구별 개표자료](http://nec.go.kr/portal/bbs/list/B0000338.do?menuNo=200061)를 다운받거나 
 [오마이뉴스 GitHub](https://github.com/OhmyNews) 사이트에 공개된 [2017년 19대 대통령 선거 시구군 득표율 사회경제지표 분석](https://github.com/OhmyNews/2017-Election) 파일을 

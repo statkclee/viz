@@ -1,0 +1,190 @@
+---
+layout: page
+title: 데이터 과학
+subtitle: 발전 에너지(원자력 포함) - 대응분석(Correspondance Analysis)
+output:
+  html_document: 
+    toc: yes
+    keep_md: yes
+  pdf_document:
+    latex_engine: xelatex
+mainfont: NanumGothic
+---
+
+```{r  include = FALSE}
+source("tools/chunk-options.R")
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE, fig.width=12)
+
+library(tidyverse)
+library(stringr)
+library(rvest)
+library(ggplot2)
+library(ggthemes)
+library(readxl)
+library(ggmosaic) # devtools::install_github("haleyjeppson/ggmosaic")
+library(NHANES) # install.packages("NHANES")
+library(extrafont)
+library(wesanderson)
+library(gapminder)
+library(FactoMineR)
+loadfonts()
+
+
+par(family = 'NanumGothic')
+```
+
+## 1. 국가별 발전 데이터 {#data}
+
+국가별 발전 데이터는 위키피디아 [List of countries by electricity production](https://en.wikipedia.org/wiki/List_of_countries_by_electricity_production) 페이지에서 
+확인할 수 있다. 이 데이터를 바탕으로 각 국가별로 신재생 에너지를 포함하여 다양한 발전에 사용되는 자원에 대해 살펴본다.
+특히, 전기 발전 데이터가 관심을 갖는 이유는 최근 [한국 미세먼지 원인 “국내 52%, 중국 34%”](http://news.kbs.co.kr/news/view.do?ncd=3519126&ref=D) 뉴스에서도 얻급 되었듯이 일상생활과 밀접한 관계가 있기 때문이다.
+
+
+## 2.  국가별 발전 패턴 분석 {#production-analysis}
+
+국가별 데이터 분석을 위해서 데이터 분석환경을 다음과 같이 설정한다.
+
+- 데이터와 사투: tidyverse, stringr
+- 웹데이터 긁어오기: rvest
+- 시각화: ggplot2, ggthemse, extrafonts
+- 탐색적 데이터 분석: FactoMineR
+- 범주형 데이터 시각화: ggmosaic
+
+### 2.1. 환경설정 {#setting}
+
+``` {r electricity-setup, eval=FALSE}
+# 0. 환경설정 -----------------------------------
+library(tidyverse)
+library(stringr)
+library(rvest)
+library(ggplot2)
+library(ggthemes)
+library(ggmosaic) # devtools::install_github("haleyjeppson/ggmosaic")
+library(extrafont)
+library(FactoMineR)
+loadfonts()
+```
+
+### 2.2. 데이터 가져오기 {#ingest}
+
+[List of countries by electricity production](https://en.wikipedia.org/wiki/List_of_countries_by_electricity_production) 웹페이지에서 
+웹크로링한다. `stringr` 팩키지 함수를 활용하여 문자열 데이터를 숫자형으로 변형하기 위해서 전처리 작업도 함께 병행한다.
+
+``` {r electricity-preprocessing}
+# 1. 원전 데이터 ---------------------
+# 국가별 전력 생산
+url <- "https://en.wikipedia.org/wiki/List_of_countries_by_electricity_production"
+
+energy <- url %>%
+    read_html() %>%
+    html_nodes(xpath='//*[@id="mw-content-text"]/div/table[2]') %>%
+    html_table(fill = TRUE) %>% 
+    .[[1]]
+
+# 2. 데이터 전처리 ---------------------
+colnames(energy) <- c("country", "Electricity production\n(TWh)", "coal", 
+                      "natural_gas", "oil", "subtotal_thermal", "hydropower", 
+                      "other_renewable", "subtotal_renewable", "nuclear")
+  
+energy_df <- energy %>% filter(country != "Country") %>% 
+    mutate(coal = as.numeric(str_replace(coal, "%", "")),
+           natural_gas = as.numeric(str_replace(natural_gas, "%", "")),
+           oil = as.numeric(str_replace(oil, "%", "")),
+           hydropower = as.numeric(str_replace(hydropower, "%", "")),
+           other_renewable = as.numeric(str_replace(other_renewable, "%", "")),
+           nuclear = as.numeric(str_replace(nuclear, "%", "")),
+           subtotal_thermal = as.numeric(str_replace(subtotal_thermal, "%", "")),
+           subtotal_renewable = as.numeric(str_replace(subtotal_renewable, "%", ""))) %>% 
+    dplyr::rename(발전량 = `Electricity production\n(TWh)`) %>% 
+    mutate(발전량 = as.numeric(str_replace(발전량, ",", ""))) %>% 
+    filter(country != "World") %>% 
+    column_to_rownames(var="country")
+```
+
+## 3. 국가별 발전 시각화 {#mosaic-viz}
+
+### 3.1. 막대그래프를 활용 비율 시각화 {#stacked-barchart}
+
+우선 원본데이터가 발전량과 각 발전 에너지원별로 나눠져서 있어 이를 `ggplot`을 활용하여 시각화한다. 
+국가별 발전 데이터가 원천별로 퍼센트(%) 비율로 정리되어 있어 바로 쌓은 막대그래프(stacked barchart) geom을 적용하여 시각화한다. 또한, 국가별 발전량을 고려하여 가장 많은 전기를 생산하는 국가부터 정렬하여 순서대로 표현한다.
+
+``` {r electricity-percentage}
+# 3. 시각화 ---------------------
+
+## 3.1. 발전량 순위별 에너지 원천 -----------
+energy_df %>% 
+    rownames_to_column(var="country") %>% 
+    select(-contains("subtotal_"), 국가=country) %>% 
+    filter(국가 != "World") %>% 
+    arrange(desc(발전량)) %>% 
+    gather(에너지, 비율, -국가, -발전량) %>% 
+    mutate(에너지 = factor(에너지, levels=c("coal", "oil", "nuclear", "natural_gas", "hydropower", "other_renewable"))) %>% 
+    # filter(에너지 !="발전량") %>% 
+    ggplot(data = ., aes(x=reorder(국가, -발전량), y=비율, fill=에너지)) +
+    geom_bar(stat="identity") +
+    labs(x="", y="점유비율", title='국가 에너지별 발전 원천상세', fill="발전원천") + 
+    theme_bw(base_family="NanumGothic") +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1),
+          legend.position='right', legend.direction='vertical') +
+    scale_fill_brewer(palette="Set1")
+
+```
+
+### 3.2. 모자이크 그래프를 적용한 국가별 발전량 시각화 {#mosaic-viz}
+
+앞선 그래프가 발전량 순서로 정렬하여 표현하였지만, 이를 실제적으로 반영하는데 모자이크 그래프를 활용한다.
+발전량과 비율로 된 것을 실제 발전량으로 변환하여 모자이크 그래프로 시각화하게 되면 한눈에 발전량과 함께 
+국가별로 발전에 어떤 자원을 투입하는지도 명확히 확인된다.
+
+``` {r electricity-mosaic}
+## 3.2. 발전량 고려 -----------
+energy_actual_df <- energy_df %>% 
+    rownames_to_column(var="국가") %>% 
+    mutate(coal = 발전량 * coal/100,
+           natural_gas = 발전량 * natural_gas/100,
+           oil = 발전량 * oil/100,
+           hydropower = 발전량 * hydropower/100,
+           other_renewable = 발전량 * other_renewable/100,
+           nuclear = 발전량 * nuclear/100) %>% 
+        select(국가, 석탄=coal, 천연가스=natural_gas, 석유=oil, 수력=hydropower, 신재생=other_renewable, 원자력=nuclear)
+
+energy_actual_df %>% 
+    gather(에너지, 생산량, -국가) %>% 
+    mutate(에너지 = factor(에너지, levels=c("석탄", "석유", "천연가스", "수력", "신재생", "원자력"))) %>% 
+    ggplot(data = .) +
+    geom_mosaic(aes(weight = 생산량, x = product(reorder(국가, -생산량)), fill=factor(에너지)), na.rm=TRUE) +
+    labs(x="", title='국가 에너지별 발전 원천상세') + 
+    theme_bw(base_family="NanumGothic") +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1),
+          legend.position='right', legend.direction='vertical') +
+    scale_fill_brewer(palette="Set1") +
+    guides(fill=guide_legend(title = "에너지", reverse = TRUE))
+```
+
+## 4. 대응분석 {#ca}
+
+대응분석을 통해 1,2차원이 약 60%를 설명하는데 `Dim 1` 차원은 석유와 원자력이 우측에 위치하고 석유가 반대쪽에 위치한 것으로 봐서 **가성비**로 잠정 볼 수 있고, `Dim 2` 차원은 수력과 신재생이 윗쪽에 석유, 석탄, 천연가스가 아래쪽에 위치한 것으로 봐서 **친환경**으로 잠정 볼 수 있다. 특히, 신재생과 열을 이용한 발전합계(subtotal_renewable, subtotal_thermal)이 위와 아래 각각 위치한 것도 차원식별에 도움이 된다.
+
+대한민국은 독일, 미국, 덴마크와 유사한 패턴을 보이고 있다. 눈여겨 볼 것은 **러시아**가 위키피디아 발전패턴의 평균적인 모습을 보이고 있다.
+
+``` {r electricity-ca, fig.height=10}
+# 4. 대응분석 ---------------------
+energy_ca_df <- energy_df[,-1]
+energy_ca <- CA(energy_ca_df, col.sup=c(4,7))
+summary(energy_ca)
+
+par(mfrow=c(1,2))
+plot(energy_ca, shadow=TRUE, cex=0.7, title="국가별 에너지 생성 원천")
+#plot(energy_ca, invisible=c("col.sup"), shadow=TRUE, cex=0.7, title="국가별 에너지 생성 원천")
+plot(energy_ca, axes=c(1,3), shadow=TRUE, cex=0.7, title="국가별 에너지 생성 원천")
+```
+
+### 4.1. 분석에 사용된 데이터 {#ca-table}
+
+`DT` 팩키지를 통해 시각적으로 확인된 사항을 표를 통해 면밀한 검토도 추가로 가능하다.
+
+``` {r electricity-tbl}
+energy %>% 
+    filter(country != "Country") %>% 
+    DT::datatable()
+```
