@@ -96,7 +96,6 @@ draw_hh_graph <- function(var_name, var_rename) {
 }
 ```
 
-
 ### 3.1. 가구원수(명)
 
 ``` {r household-number}
@@ -169,6 +168,52 @@ draw_hh_money_graph("10.교육 (원)", "교육비 지출")
 draw_hh_money_graph("06.보건 (원)", "보건의료지출")
 ```
 
+## 5. 엥겔지수 {#engel-coefficient}
 
+엥겔지수(Engel Coefficient)는 소득이 높아도 식비는 다른 지출에 비해 크게 오르지 않는다는 것을 전제로 한 개념으로, 
+보통 $\frac{\text{식비}}{\text{총소득}}$ 이나 $\frac{\text{식비}}{\text{총지출비}}$ 등으로 표현하는데, 가장 많이 정의되는 $\frac{\text{식비}}{\text{총소득}}$을 바탕으로 분위별 엥겔지수를 환산하여 애니메이션으로 제작한다. [^engel-namu]
 
+대한민국 1분위(하위20%)는 2010년, 2011년 나무위키 자료에 의하면 22% 대를 유지하고 있다.
 
+[^engel-namu]: [나무위키 - 엥겔 계수](https://namu.wiki/w/%EC%97%A5%EA%B2%94%20%EA%B3%84%EC%88%98)
+
+``` {r household-engel}
+# 3. 엥겔지수 -----------------------------------
+
+exp_hh_df <- hh_df %>% filter(가계수지항목 %in% c("가계지출 (원)")) %>% 
+    select(-가계수지항목) %>% 
+    gather(연도, 지출총액, -월소득10분위별)
+
+food_hh_df <- hh_df %>% filter(가계수지항목 %in% c("01.식료품 · 비주류음료 (원)")) %>% 
+    select(-가계수지항목) %>% 
+    gather(연도, 식료품비, -월소득10분위별)
+
+engel_hh_df <- inner_join(exp_hh_df, food_hh_df) %>% 
+    mutate(엥겔지수 = 식료품비/지출총액) %>% 
+    filter(월소득10분위별 %in% c("전체  평균", "１분위", "５분위", "１０분위")) %>% 
+    mutate(연도 = str_replace_all(연도, "가구_", "")) %>% 
+    mutate(연도 = lubridate::ymd(paste0("20", 연도, "-01-01")))
+
+engel_hh_df <- engel_hh_df %>% 
+    mutate(year = lubridate::year(연도))
+
+engel_hh_df %>% select(-year) %>% 
+    DT::datatable() %>% 
+      DT::formatRound(c("지출총액", "식료품비"), digits=0) %>% 
+      DT::formatRound(c("엥겔지수"), digits=2)
+
+# 4. 시각화 -----------------------------------
+
+decile_colors <- c("#ffee00", "#00e5ff", "#0026ff", "#ff0000")
+
+engel_hh_gg <- ggplot(engel_hh_df, aes(x=연도, y=엥겔지수, color=월소득10분위별, cumulative = TRUE)) +
+    geom_line(alpha=0.7, size=1) +
+    geom_point(aes(x=연도, y=엥겔지수, frame=year), alpha=0.7, size=3) +
+    theme_tufte(base_family="NanumGothic") + 
+    labs(x="", y="엥겔지수", title="월소득 주요 분위수별 엥겔지수") +
+    scale_color_manual(name="분위별", values=decile_colors)
+
+# gganimate::gganimate(engel_hh_gg, "fig/engel_coefficient.gif")
+```
+
+<img src="fig/engel_coefficient.gif" alt="엥겔지수 애니메이션" width="100%" /> 
