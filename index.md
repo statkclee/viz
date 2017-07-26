@@ -35,6 +35,7 @@ title: 데이터 과학 -- 시각화
     - [범주형 데이터 시각화 기초](http://statkclee.github.io/data-science/ds-factor-dplyr-mosaic.html)
         - [범주형 자료 - 모자이크(mosaic): 통계청 출산(2016)](viz-mosaic-plot.html)
         - [발전 에너지(원자력 포함) - 대응분석(Correspondance Analysis)](viz-mosaic-ca.html)
+    - [가구당 가계수지 - 10 분위별](viz-household-balance-deciles.html)
 
 ### [xwMOOC 오픈 교재](https://statkclee.github.io/xwMOOC/)
 
