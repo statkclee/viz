@@ -13,7 +13,7 @@ mainfont: NanumGothic
 
 ```{r  include = FALSE}
 source("tools/chunk-options.R")
-knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE, fig.width = 12, fig.height = 7)
 
 library(tidyverse)
 library(stringr)
@@ -32,7 +32,7 @@ loadfonts()
 par(family = 'NanumGothic')
 ```
 
-## 1. 분위별 가계 소득, 지출 현황
+## 1. 분위별 가계 소득, 지출 현황 {#nso-balance-data}
 
 소득분배 불평등에 대한 현황을 배율 혹은 백분율 기준으로 정보가 제공되고 있어 전문적으로 
 훈련을 받지 않는 일반인 혹은 급하게 현황을 파악해야하는 입장에서는 쉽지 않다. [^household-inequality] [^chosun-inequality]
@@ -45,7 +45,7 @@ par(family = 'NanumGothic')
 소득 10분위별로 가구당 소득 및 지출에 대한 상세한 정보를 얻을 수 있다. 
 엑셀이나 `.csv` 파일로 다운로드 받게 되면 빅데이터는 아니지만, 스몰데이터로 실제 엥겔지수 등 통계작업을 이어서 하거나, 시각화 작업이 그다지 녹록하지는 않다.
 
-## 2. 주요 월소득 10 분위별 가계수지 항목별 분석 사전 준비
+## 2. 주요 월소득 10 분위별 가계수지 항목별 분석 사전 준비 {#nso-setup}
 
 통계청 소득 10 분위별 가구당 가계수지 데이터는 가구원수와 연령에 대한 정보와 함께 소득, 가계지출에 대한 금전적인 내용이 담겨있다.
 데이터를 받아 분석이 가능한 형태로 만들고 반복되는 분석 시각화를 위해 시각화 함수를 별도로 작성한다.
@@ -71,7 +71,7 @@ hh_df <- hh_dat %>% mutate(월소득10분위별 = zoo::na.locf(월소득10분위
 ```
 
 
-## 3. 주요 월소득 10 분위별 주요 지표 비교 {.tabset .tabset-fade .tabset-pills}
+## 3. 주요 월소득 10 분위별 주요 지표 비교 {.tabset .tabset-fade .tabset-pills} {#major-index}
 
 ``` {r household-info-viz}
 ## 2.0. 시각화 함수 --------------------------------
@@ -96,31 +96,31 @@ draw_hh_graph <- function(var_name, var_rename) {
 }
 ```
 
-### 3.1. 가구원수(명)
+### 3.1. 가구원수(명) {#major-number-of-household}
 
 ``` {r household-number}
 draw_hh_graph("가구원수 (명)", "가구원수")
 ```
 
-### 3.2. 가구주 평균연령(세) 
+### 3.2. 가구주 평균연령(세) {#major-household-age}
 
 ``` {r household-age}
 draw_hh_graph("가구주연령 (세)", "가구주 연령")
 ```
 
-### 3.3. 평균 소비성향(%)
+### 3.3. 평균 소비성향(%) {#major-propenstiy-to-consume}
 
 ``` {r household-propensity}
 draw_hh_graph("평균소비성향 (%)", "평균소비성향")
 ```
 
-### 3.4. 가계 흑자율(%)
+### 3.4. 가계 흑자율(%) {#major-surplus}
 
 ``` {r household-surplus}
 draw_hh_graph("흑자율 (%)", "가계 흑자율")
 ```
 
-## 4. 주요 월소득 10 분위별 가계소득, 소비지출 {.tabset .tabset-fade .tabset-pills}
+## 4. 주요 월소득 10 분위별 가계소득, 소비지출 {.tabset .tabset-fade .tabset-pills} {#deciles-tab}
 
 ``` {r household-income-expenditure-viz}
 draw_hh_money_graph <- function(var_name, var_rename) {
@@ -144,25 +144,25 @@ draw_hh_money_graph <- function(var_name, var_rename) {
 ```
 
 
-### 4.1. 가구소득
+### 4.1. 가구소득 {#deciles-income}
 
 ``` {r household-income}
 draw_hh_money_graph("소득 (원)", "가구소득")
 ```
 
-### 4.2. 가구 소비지출
+### 4.2. 가구 소비지출 {#deciles-expenditure}
 
 ``` {r household-expenditure}
 draw_hh_money_graph("소비지출 (원)", "가구소비지출")
 ```
 
-### 4.3. 교육비 지출
+### 4.3. 교육비 지출 {#deciles-education}
 
 ``` {r household-edu}
 draw_hh_money_graph("10.교육 (원)", "교육비 지출")
 ```
 
-### 4.4. 보건의료지출
+### 4.4. 보건의료지출 {#deciles-healthcare}
 
 ``` {r household-healthcare}
 draw_hh_money_graph("06.보건 (원)", "보건의료지출")
@@ -216,4 +216,68 @@ engel_hh_gg <- ggplot(engel_hh_df, aes(x=연도, y=엥겔지수, color=월소득
 # gganimate::gganimate(engel_hh_gg, "fig/engel_coefficient.gif")
 ```
 
-<img src="fig/engel_coefficient.gif" alt="엥겔지수 애니메이션" width="100%" /> 
+<img src="fig/engel_coefficient.gif" alt="엥겔지수 애니메이션"/> 
+
+
+## 6. 분위별 가계소득과 지출 흐름(Sankey) {.tabset .tabset-fade .tabset-pills} {#sankey}
+
+주요 분위별 가계소득이 어떻게 들어오고, 소득을 어느 분야에 사용하는지와 함께 흑자와 적자에 대한 
+내용을 생키도해(Sankey Diagram)을 통해 시각화한다. 이를 위해 `networkD3` 팩키지 
+`sankeyNetwork()` 함수를 사용하고 분위별 가계소득, 소비지출 데이터를 적절한 형태로 가공한다.
+
+
+``` {r household-sankey-data}
+library(networkD3)
+
+# 1. 데이터 가져오기 -----------------------------------
+income_dat <- read_excel("data/소득10분위별__가구당_가계수지__전국_2인이상__20170725133926.xlsx", sheet="01_소득", col_names=TRUE)
+expense_dat <- read_excel("data/소득10분위별__가구당_가계수지__전국_2인이상__20170725133926.xlsx", sheet="02_지출", col_names=TRUE)
+
+hh_dat <- bind_rows(income_dat, expense_dat)
+
+names(hh_dat) <- c("분위별", "from", "to",  "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "2015", "2016")
+
+
+draw_sankey <- function(hh_year, hh_decile) {
+    
+    # 데이터 정제작업
+    hh_flow <- hh_dat %>% filter(분위별==hh_decile) %>% 
+        select(from, to, 소득지출 = hh_year) %>% 
+        mutate(소득지출 = ifelse(from=="소득" & to=="가계지출", 소득지출/2, 소득지출))
+    
+    # 생키그림 -----------------------------------
+    
+    hh_node <- unique(c(hh_flow$from, hh_flow$to))
+    hh_node_df <- data.frame(id=c(0:(length(hh_node)-1)), name=hh_node)
+    
+    lut <- c("소득" = 0, "경상소득" = 1,"근로소득" = 2,"사업소득" =3,"재산소득" =4,"이전소득" =5,"비경상소득"=6,"가계지출" =7,
+             "소비지출"=8, "01.식료품·비주류음료"=9, "02.주류·담배"=10, "03.의류·신발"=11, "04.주거·수도·광열"=12, 
+             "05.가정용품·가사서비스"=13, "06.보건"=14, "07.교통"=15, "08.통신"=16, "09.오락·문화"=17, "10.교육"=18, 
+             "11.음식·숙박"=19, "12.기타상품·서비스"=20, "비소비지출"=21) 
+    
+    hh_flow$from <-  lut[hh_flow$from]
+    hh_flow$to <-  lut[hh_flow$to]
+    
+    sankeyNetwork(Links = hh_flow, Nodes = hh_node_df, Source = 'from',
+                  Target = 'to', Value = '소득지출', NodeID = 'name',
+                  width = 700, fontSize = 12, nodeWidth = 30, fontFamily="NanumGothic")
+}
+
+```
+
+### 가계 소득과 소비지출 흐름 - 2003 {#sankey-2003}
+
+``` {r household-sankey-plot-2003}
+# 2. 생키도해 시각화 -------
+draw_sankey("2003", "１분위")
+draw_sankey("2003", "전체평균")
+draw_sankey("2003", "１０분위")
+```
+
+### 가계 소득과 소비지출 흐름 - 2016 {#sankey-2016}
+
+``` {r household-sankey-plot-2016}
+draw_sankey("2016", "１분위")
+draw_sankey("2016", "전체평균")
+draw_sankey("2016", "１０분위")
+```
