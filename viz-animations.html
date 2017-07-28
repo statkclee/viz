@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="generator" content="pandoc">
+    <title>Software Carpentry: </title>
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" type="text/css" href="css/bootstrap/bootstrap.css" />
+    <link rel="stylesheet" type="text/css" href="css/bootstrap/bootstrap-theme.css" />
+    <link rel="stylesheet" type="text/css" href="css/swc.css" />
+    <link rel="alternate" type="application/rss+xml" title="Software Carpentry Blog" href="http://software-carpentry.org/feed.xml"/>
+    <meta charset="UTF-8" />
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="https://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+    
+      ga('create', 'UA-59802572-17', 'auto');
+      ga('send', 'pageview');
+    
+    </script>
+  </head>
+  <body class="lesson">
+    <div class="container card">
+      <div class="banner">
+        <a href="http://software-carpentry.org" title="Software Carpentry">
+          <img alt="Software Carpentry banner" src="img/software-carpentry-banner.png" />
+        </a>
+      </div>
+      <article>
+      <div class="row">
+        <div class="col-md-10 col-md-offset-1">
+                    <h1 class="title"></h1>
+          <h1 id="데이터-과학">데이터 과학</h1>
+<h2 id="정적-그래프에서-부드러운-동영상-그래프까지.">1. 정적 그래프에서 부드러운 동영상 그래프까지.</h2>
+<p><code>ggplot</code>을 통해서 정적 그래프를 그려봤다면, 시각화를 통해 더 많은 감동을 선사하고자 <code>.git</code> 파일을 비롯한 동영상이 최근 많이 도입되고 있다. 제19대 대통령선거를 거치면서 선거에 다양한 시각화 통계기법들이 도입된 것도 사실이다. 이제, 정적인 그래프에서 시작하여 정말 부드러운 동영상 그래프까지 차근차근 만들어 보자.</p>
+<h2 id="정당-지지율-데이터">2. 정당 지지율 데이터</h2>
+<p><code>gganimate</code>, <code>tweenr</code> 팩키지가 애니메이션 그래프를 위해 필요한 팩키지다. 그전에 <a href="https://namu.wiki/w/%ED%8B%80:%ED%95%9C%EA%B5%AD%EA%B0%A4%EB%9F%BD%202017%EB%85%84%20%EC%A0%95%EB%8B%B9%20%EC%97%AC%EB%A1%A0%EC%A1%B0%EC%82%AC">나무위키 갤럽 정당 지지율</a> 데이터를 <code>rvest</code> 팩키지를 통해 긁어와서 데이터 전처리 과정을 거쳐 시각화할 수 있는 데이터프레임으로 변환시킨다.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># 0. 환경설정 ------------------------------</span>
+<span class="co"># library(ggplot2)</span>
+<span class="co"># library(rvest)</span>
+<span class="co"># library(tidyverse)</span>
+<span class="co"># library(stringr)</span>
+<span class="co"># library(gganimate) # devtools::install_github(&quot;dgrtwo/gganimate&quot;)</span>
+<span class="co"># library(extrafont)</span>
+<span class="co"># library(tweenr) # devtools::install_github(&quot;thomasp85/tweenr&quot;)</span>
+
+<span class="co"># 1. 정당지지율 데이터 긁어오기 ------------</span>
+<span class="kw">Sys.setlocale</span>(<span class="st">&quot;LC_ALL&quot;</span>, <span class="st">&quot;English&quot;</span>)</code></pre></div>
+<pre class="output"><code>[1] &quot;LC_COLLATE=English_United States.1252;LC_CTYPE=English_United States.1252;LC_MONETARY=English_United States.1252;LC_NUMERIC=C;LC_TIME=English_United States.1252&quot;
+</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">gallop_url &lt;-<span class="st"> &quot;https://namu.wiki/w/%ED%8B%80:%ED%95%9C%EA%B5%AD%EA%B0%A4%EB%9F%BD%202017%EB%85%84%20%EC%A0%95%EB%8B%B9%20%EC%97%AC%EB%A1%A0%EC%A1%B0%EC%82%AC&quot;</span>
+
+gallop_html &lt;-<span class="st"> </span><span class="kw">read_html</span>(gallop_url)
+gallop_tbl &lt;-<span class="st"> </span><span class="kw">html_table</span>(gallop_html, <span class="dt">fill=</span><span class="ot">TRUE</span>)[[<span class="dv">1</span>]]
+
+<span class="kw">Sys.setlocale</span>(<span class="st">&quot;LC_ALL&quot;</span>, <span class="st">&quot;Korean&quot;</span>)</code></pre></div>
+<pre class="output"><code>[1] &quot;LC_COLLATE=Korean_Korea.949;LC_CTYPE=Korean_Korea.949;LC_MONETARY=Korean_Korea.949;LC_NUMERIC=C;LC_TIME=Korean_Korea.949&quot;
+</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># 2. 데이터 전처리 ------------</span>
+<span class="kw">names</span>(gallop_tbl) &lt;-<span class="st"> </span>gallop_tbl[<span class="dv">1</span>,]
+
+gallop_df &lt;-<span class="st"> </span>gallop_tbl %&gt;%<span class="st"> </span>dplyr::<span class="kw">filter</span>(!(<span class="kw">row_number</span>() %in%<span class="st"> </span><span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">26</span>, <span class="dv">27</span>))) %&gt;%<span class="st"> </span>
+<span class="st">  </span><span class="kw">mutate</span>(더불어민주당    =<span class="st"> </span><span class="kw">as.numeric</span>(<span class="kw">str_replace_all</span>(더불어민주당, <span class="st">&quot;%&quot;</span>, <span class="st">&quot;&quot;</span>)), 
+             국민의당    =<span class="st"> </span><span class="kw">as.numeric</span>(<span class="kw">str_replace_all</span>(국민의당, <span class="st">&quot;%&quot;</span>, <span class="st">&quot;&quot;</span>)), 
+             자유한국당  =<span class="st"> </span><span class="kw">as.numeric</span>(<span class="kw">str_replace_all</span>(자유한국당, <span class="st">&quot;%&quot;</span>, <span class="st">&quot;&quot;</span>)), 
+             바른정당    =<span class="st"> </span><span class="kw">as.numeric</span>(<span class="kw">str_replace_all</span>(바른정당, <span class="st">&quot;%&quot;</span>, <span class="st">&quot;&quot;</span>)),
+             정의당      =<span class="st"> </span><span class="kw">as.numeric</span>(<span class="kw">str_replace_all</span>(정의당, <span class="st">&quot;%&quot;</span>, <span class="st">&quot;&quot;</span>))) %&gt;%<span class="st"> </span>
+<span class="st">  </span>dplyr::<span class="kw">select</span>(주차, 더불어민주당, 국민의당, 자유한국당, 정의당, 바른정당)
+
+gallop_date &lt;-<span class="st"> </span><span class="kw">seq</span>(<span class="kw">as.Date</span>(<span class="st">&#39;2017-01-01&#39;</span>), <span class="dt">length.out=</span><span class="dv">25</span>, <span class="dt">by =</span> <span class="st">&#39;week&#39;</span>)
+gallop_date &lt;-<span class="st"> </span>gallop_date[-<span class="dv">4</span>]
+
+gallop_df &lt;-<span class="st"> </span><span class="kw">data.frame</span>(날짜=gallop_date, gallop_df)
+
+gallop_viz_df &lt;-<span class="st"> </span>gallop_df %&gt;%<span class="st"> </span><span class="kw">gather</span>(정당, 지지율, -주차, -날짜) %&gt;%<span class="st"> </span>
+<span class="st">  </span><span class="kw">mutate</span>(지지율 =<span class="st"> </span>지지율 /<span class="st"> </span><span class="dv">100</span>) %&gt;%<span class="st"> </span>
+<span class="st">  </span><span class="kw">mutate</span>(정당 =<span class="st"> </span><span class="kw">factor</span>(정당, <span class="dt">levels=</span><span class="kw">c</span>(<span class="st">&quot;더불어민주당&quot;</span>, <span class="st">&quot;자유한국당&quot;</span>, <span class="st">&quot;국민의당&quot;</span>, <span class="st">&quot;바른정당&quot;</span>, <span class="st">&quot;정의당&quot;</span>)))</code></pre></div>
+<h2 id="정당-지지율-변화-시각화">3. 정당 지지율 변화 시각화</h2>
+<h3 id="정적-그래프">3.1. 정적 그래프</h3>
+<p>가장 먼저 정당별 시간에 따른 지지율 변화를 <code>ggplot</code>을 통해 주단위로 시각화한다. 각 정당별로 색상이 있어 RGB 색상을 <code>ggplot</code>에 입히는 것도 중요하다.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># 3. 시각화 ------------</span>
+party_colors &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;#065ce8&quot;</span>, <span class="st">&quot;#ff0000&quot;</span>, <span class="st">&quot;#07f91f&quot;</span>, <span class="st">&quot;#00faff&quot;</span>, <span class="st">&quot;#f2ee09&quot;</span>)
+
+## 3.1. 전체정당 지지율 시각화 ------------------------------------
+<span class="kw">ggplot</span>(gallop_viz_df, <span class="kw">aes</span>(<span class="dt">x=</span>날짜, <span class="dt">y=</span>지지율, <span class="dt">group=</span>정당, <span class="dt">color=</span>정당)) +
+<span class="st">  </span><span class="kw">geom_point</span>(<span class="dt">size=</span><span class="fl">1.5</span>) +
+<span class="st">  </span><span class="kw">geom_line</span>() +
+<span class="st">  </span><span class="kw">scale_x_date</span>(<span class="dt">date_breaks=</span><span class="st">&quot;1 week&quot;</span>, <span class="dt">date_labels=</span><span class="st">&quot;%m-%d&quot;</span>) +
+<span class="st">  </span><span class="kw">scale_y_continuous</span>(<span class="dt">labels=</span>scales::percent) +
+<span class="st">  </span><span class="kw">theme_bw</span>(<span class="dt">base_family=</span><span class="st">&quot;NanumGothic&quot;</span>) +
+<span class="st">  </span><span class="kw">scale_colour_manual</span>(<span class="dt">name=</span><span class="st">&quot;정당명&quot;</span>, <span class="dt">values=</span>party_colors) +
+<span class="st">  </span><span class="kw">labs</span>(<span class="dt">x=</span><span class="st">&quot;&quot;</span>, <span class="dt">y=</span><span class="st">&quot;정당지지율&quot;</span>, <span class="dt">color=</span><span class="st">&quot;&quot;</span>) +
+<span class="st">  </span><span class="kw">theme</span>(<span class="dt">legend.position =</span> <span class="st">&quot;top&quot;</span>, 
+        <span class="dt">axis.text.x =</span> <span class="kw">element_text</span>(<span class="dt">angle =</span> <span class="dv">90</span>, <span class="dt">hjust =</span> <span class="dv">1</span>))</code></pre></div>
+<p><img src="fig/party-approval-static-1.png" style="display: block; margin: auto;" /></p>
+<h3 id="small-multiple-정적-그래프-시각화">3.2. small multiple 정적 그래프 시각화</h3>
+<p>전체 정당을 높고 비교할 때는 한장의 그래프에 모든 정당의 시간에 따른 지지율 변화를 보여주는 것이 좋지만, small multiple 개념을 도입하면, 각각의 정당별로 쪼개서 비교하는 것도 데이터를 보는 입장에서는 편하다.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## 3.2. 정당별 지지율 시각화 ------------------------------------
+<span class="kw">ggplot</span>(gallop_viz_df, <span class="kw">aes</span>(<span class="dt">x=</span>날짜, <span class="dt">y=</span>지지율, <span class="dt">group=</span>정당, <span class="dt">color=</span>정당)) +
+<span class="st">  </span><span class="kw">geom_point</span>(<span class="dt">size=</span><span class="fl">1.5</span>) +
+<span class="st">  </span><span class="kw">geom_line</span>() +
+<span class="st">  </span><span class="kw">scale_x_date</span>(<span class="dt">date_breaks=</span><span class="st">&quot;1 week&quot;</span>, <span class="dt">date_labels=</span><span class="st">&quot;%m-%d&quot;</span>) +
+<span class="st">  </span><span class="kw">scale_y_continuous</span>(<span class="dt">labels=</span>scales::percent) +
+<span class="st">  </span><span class="kw">theme_bw</span>(<span class="dt">base_family=</span><span class="st">&quot;NanumGothic&quot;</span>) +
+<span class="st">  </span><span class="kw">scale_colour_manual</span>(<span class="dt">name=</span><span class="st">&quot;정당명&quot;</span>, <span class="dt">values=</span>party_colors) +
+<span class="st">  </span><span class="kw">labs</span>(<span class="dt">x=</span><span class="st">&quot;&quot;</span>, <span class="dt">y=</span><span class="st">&quot;정당지지율&quot;</span>, <span class="dt">color=</span><span class="st">&quot;&quot;</span>) +
+<span class="st">  </span><span class="kw">theme</span>(<span class="dt">legend.position =</span> <span class="st">&quot;top&quot;</span>, 
+        <span class="dt">axis.text.x =</span> <span class="kw">element_text</span>(<span class="dt">angle =</span> <span class="dv">90</span>, <span class="dt">hjust =</span> <span class="dv">1</span>)) +
+<span class="st">  </span><span class="kw">facet_wrap</span>(~정당, <span class="dt">scale=</span><span class="st">&quot;free&quot;</span>)</code></pre></div>
+<p><img src="fig/party-approval-static-facet-1.png" style="display: block; margin: auto;" /></p>
+<h3 id="정당지지율-변화를-애니메이션으로-만들기">3.3. 정당지지율 변화를 애니메이션으로 만들기</h3>
+<p>데이터가 시계열 데이터로 시간의 개념을 담겨있기 때문에 시간의 흐름에 따른 애니메이션으로 그래프를 표현하게 되면 새로운 인사이트를 얻을 수 있다. <code>gganimate</code> 팩키지가 <code>ggplot</code>에 프레임 개념을 넣어 애니메이션으로 쉽게 변화시키는 것을 도와준다.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## 3.3. 정당별 지지율 변화 애니메이션 ----------------------------
+party_gg &lt;-<span class="st"> </span><span class="kw">ggplot</span>(gallop_viz_df, <span class="kw">aes</span>(<span class="dt">x=</span>날짜, <span class="dt">y=</span>지지율, <span class="dt">group=</span>정당, <span class="dt">color=</span>정당)) +
+<span class="st">  </span><span class="kw">geom_point</span>(<span class="kw">aes</span>(<span class="dt">frame =</span> <span class="st">`</span><span class="dt">주차</span><span class="st">`</span>), <span class="dt">size=</span><span class="fl">3.5</span>) +
+<span class="st">  </span><span class="kw">geom_line</span>(<span class="dt">alpha=</span><span class="fl">0.3</span>, <span class="dt">size=</span><span class="fl">1.5</span>) +
+<span class="st">  </span><span class="kw">scale_x_date</span>(<span class="dt">date_breaks=</span><span class="st">&quot;1 week&quot;</span>, <span class="dt">date_labels=</span><span class="st">&quot;%m-%d&quot;</span>) +
+<span class="st">  </span><span class="kw">scale_y_continuous</span>(<span class="dt">labels=</span>scales::percent) +
+<span class="st">  </span><span class="kw">theme_bw</span>(<span class="dt">base_family=</span><span class="st">&quot;NanumGothic&quot;</span>) +
+<span class="st">  </span><span class="kw">scale_colour_manual</span>(<span class="dt">name=</span><span class="st">&quot;정당명&quot;</span>, <span class="dt">values=</span>party_colors) +
+<span class="st">  </span><span class="kw">labs</span>(<span class="dt">x=</span><span class="st">&quot;&quot;</span>, <span class="dt">y=</span><span class="st">&quot;정당지지율&quot;</span>, <span class="dt">color=</span><span class="st">&quot;&quot;</span>) +
+<span class="st">  </span><span class="kw">theme</span>(<span class="dt">legend.position =</span> <span class="st">&quot;top&quot;</span>, 
+        <span class="dt">axis.text.x =</span> <span class="kw">element_text</span>(<span class="dt">angle =</span> <span class="dv">90</span>, <span class="dt">hjust =</span> <span class="dv">1</span>),
+        <span class="dt">axis.text=</span><span class="kw">element_text</span>(<span class="dt">size=</span><span class="dv">16</span>, <span class="dt">color=</span><span class="st">&quot;black&quot;</span>), 
+        <span class="dt">legend.text=</span><span class="kw">element_text</span>(<span class="dt">size=</span><span class="dv">18</span>), 
+        <span class="dt">plot.title =</span> <span class="kw">element_text</span>(<span class="dt">size=</span><span class="dv">22</span>)) 
+
+<span class="co"># gganimate(party_gg, &quot;정당지지율_2017.gif&quot;, ani.width = 640, ani.height = 480)</span>
+<span class="co"># gganimate(party_gg)</span></code></pre></div>
+<p><img src="fig/party_2017.gif" alt="지지율 변화" width="100%" /></p>
+<h3 id="자연스로운-애니메이션">3.3. 자연스로운 애니메이션</h3>
+<p><code>gganimate</code> 팩키지를 통해 애니메이션 구현이 가능하지만, 동영상같은 자연스러운 영상을 구현하기 위해서 <code>tweenr</code> 팩키지가 필요하고 적절히 자료형을 맞춰 주면 아주 부드러운 동영상 애니메이션을 볼 수 있게 된다.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## 3.4. 정당별 지지율 부드러운 변화 애니메이션 ----------------------------
+gallop_viz_df_tw &lt;-<span class="st"> </span>gallop_viz_df %&gt;%<span class="st"> </span>dplyr::<span class="kw">select</span>(-주차) %&gt;%<span class="st"> </span>
+<span class="st">  </span><span class="kw">split</span>(.$날짜) %&gt;%<span class="st"> </span>
+<span class="st">  </span><span class="kw">tween_states</span>(<span class="dt">tweenlength =</span> <span class="dv">5</span>, <span class="dt">statelength =</span><span class="dv">0</span>, <span class="dt">ease =</span><span class="st">&quot;linear&quot;</span>, <span class="dt">nframes =</span> <span class="dv">100</span>) %&gt;%<span class="st"> </span>
+<span class="st">  </span><span class="kw">mutate</span>(정당 =<span class="st"> </span><span class="kw">factor</span>(정당, <span class="dt">levels=</span><span class="kw">c</span>(<span class="st">&quot;더불어민주당&quot;</span>, <span class="st">&quot;자유한국당&quot;</span>, <span class="st">&quot;국민의당&quot;</span>, <span class="st">&quot;바른정당&quot;</span>, <span class="st">&quot;정의당&quot;</span>)))
+
+
+party_tw_gg &lt;-<span class="st"> </span><span class="kw">ggplot</span>(gallop_viz_df_tw, <span class="kw">aes</span>(<span class="dt">x=</span>날짜, <span class="dt">y=</span>지지율, <span class="dt">group=</span>정당, <span class="dt">color=</span>정당)) +
+<span class="st">  </span><span class="kw">geom_point</span>(<span class="kw">aes</span>(<span class="dt">frame=</span>.frame), <span class="dt">size=</span><span class="fl">3.5</span>) +
+<span class="st">  </span><span class="kw">geom_line</span>(<span class="dt">alpha=</span><span class="fl">0.3</span>, <span class="dt">size=</span><span class="fl">1.5</span>) +
+<span class="st">  </span><span class="kw">scale_x_date</span>(<span class="dt">date_breaks=</span><span class="st">&quot;1 week&quot;</span>, <span class="dt">date_labels=</span><span class="st">&quot;%m-%d&quot;</span>) +
+<span class="st">  </span><span class="kw">scale_y_continuous</span>(<span class="dt">labels=</span>scales::percent) +
+<span class="st">  </span><span class="kw">theme_bw</span>(<span class="dt">base_family=</span><span class="st">&quot;NanumGothic&quot;</span>) +
+<span class="st">  </span><span class="kw">scale_colour_manual</span>(<span class="dt">name=</span><span class="st">&quot;정당명&quot;</span>, <span class="dt">values=</span>party_colors) +
+<span class="st">  </span><span class="kw">labs</span>(<span class="dt">x=</span><span class="st">&quot;&quot;</span>, <span class="dt">y=</span><span class="st">&quot;정당지지율&quot;</span>, <span class="dt">color=</span><span class="st">&quot;&quot;</span>) +
+<span class="st">  </span><span class="kw">theme</span>(<span class="dt">legend.position =</span> <span class="st">&quot;top&quot;</span>, 
+        <span class="dt">axis.text.x =</span> <span class="kw">element_text</span>(<span class="dt">angle =</span> <span class="dv">90</span>, <span class="dt">hjust =</span> <span class="dv">1</span>),
+        <span class="dt">axis.text=</span><span class="kw">element_text</span>(<span class="dt">size=</span><span class="dv">16</span>, <span class="dt">color=</span><span class="st">&quot;black&quot;</span>), 
+        <span class="dt">legend.text=</span><span class="kw">element_text</span>(<span class="dt">size=</span><span class="dv">18</span>), 
+        <span class="dt">plot.title =</span> <span class="kw">element_text</span>(<span class="dt">size=</span><span class="dv">22</span>)) 
+
+<span class="co"># gganimate(party_tw_gg, &quot;정당지지율_2017_tw.gif&quot;, ani.width = 640, ani.height = 480, title_frame=FALSE, interval = .1)</span>
+<span class="co"># gganimate(party_tw_gg, interval=0.1)</span></code></pre></div>
+<p><img src="fig/party_2017_tw.gif" alt="지지율 변화" width="100%" /></p>
+        </div>
+      </div>
+      </article>
+      <div class="footer">
+        <a class="label swc-blue-bg" href="http://software-carpentry.org">Software Carpentry</a>
+        <a class="label swc-blue-bg" href="https://github.com/swcarpentry/lesson-template">Source</a>
+        <a class="label swc-blue-bg" href="mailto:admin@software-carpentry.org">Contact</a>
+        <a class="label swc-blue-bg" href="LICENSE.html">License</a>
+      </div>
+    </div>
+    <!-- Javascript placed at the end of the document so the pages load faster -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script src="css/bootstrap/bootstrap-js/bootstrap.js"></script>
+    <script src='https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'></script>
+  </body>
+</html>
