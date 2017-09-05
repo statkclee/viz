@@ -281,3 +281,147 @@ draw_sankey("2016", "１분위")
 draw_sankey("2016", "전체평균")
 draw_sankey("2016", "１０분위")
 ```
+
+
+## 7. 가계 소득과 지출 와플 {#waffle}
+
+[Make waffle (square pie) charts in R](https://github.com/hrbrmstr/waffle) 팩키지를 바탕으로 와플 파이(waffle pie) 그래프를 생성할 수 있다.
+
+### 7.1. 가계소득 {#waffle-income}
+
+가계소득을 대표 분위별로 뽑아서 와플 그래프로 시각화하는 것이 시각적으로 비교하기 좋은 경우가 있다.
+가계소득의 원천을 각 분위별로 최하, 평균, 최상을 뽑아 와플 그래프로 시각화한다.
+
+
+``` {r waffle-income}
+# 0. 환경설정 ----------------------------
+# install.packages("waffle")
+library(waffle)
+
+# 3. 소득 데이터----------------------------
+## 3.1. 1 분위 소득 -------------------------------
+hh_16_df <- hh_df %>% select(월소득10분위별,가계수지항목, 가구_16) %>% 
+  filter(str_detect(월소득10분위별, "１분위")) %>% 
+  filter(str_detect(가계수지항목, "소득")) %>% 
+  filter(!str_detect(가계수지항목, "처분가능소득")) %>% 
+  mutate(가계수지항목 = str_replace_all(가계수지항목, "\\s|\\(원\\)", "")) %>% 
+  filter(!가계수지항목 %in% c("소득", "경상소득")) %>% 
+  mutate(가구_16 = 가구_16/10^4)
+
+hh_items_v <- hh_16_df %>% 
+  select(가계수지항목) %>% unlist
+hh_value_v <- hh_16_df %>% 
+  select(가구_16) %>% unlist  
+
+names(hh_value_v) <- hh_items_v
+
+hh_income_1 <- waffle(hh_value_v * 5, rows=10, legend_pos = "right", xlab="정사각형 1개 = 0.2만원",
+                      title="1분위 가구당 가계수지 - 소득 (2016)")
+
+## 3.2. 평균 소득 -------------------------------
+hh_16_df <- hh_df %>% select(월소득10분위별,가계수지항목, 가구_16) %>% 
+  filter(str_detect(월소득10분위별, "전체  평균")) %>% 
+  filter(str_detect(가계수지항목, "소득")) %>% 
+  filter(!str_detect(가계수지항목, "처분가능소득")) %>% 
+  mutate(가계수지항목 = str_replace_all(가계수지항목, "\\s|\\(원\\)", "")) %>% 
+  filter(!가계수지항목 %in% c("소득", "경상소득")) %>% 
+  mutate(가구_16 = 가구_16/10^4)
+
+hh_items_v <- hh_16_df %>% 
+  select(가계수지항목) %>% unlist
+hh_value_v <- hh_16_df %>% 
+  select(가구_16) %>% unlist  
+
+names(hh_value_v) <- hh_items_v
+
+hh_income_mean <- waffle(hh_value_v, rows=10, legend_pos = "right", xlab="정사각형 1개 = 1만원",
+  title="평균 가구당 가계수지 - 소득 (2016)")
+
+## 3.3. 10 분위 소득 -------------------------------
+
+hh_16_df <- hh_df %>% select(월소득10분위별,가계수지항목, 가구_16) %>% 
+  filter(str_detect(월소득10분위별, "１０분위")) %>% 
+  filter(str_detect(가계수지항목, "소득")) %>% 
+  filter(!str_detect(가계수지항목, "처분가능소득")) %>% 
+  mutate(가계수지항목 = str_replace_all(가계수지항목, "\\s|\\(원\\)", "")) %>% 
+  filter(!가계수지항목 %in% c("소득", "경상소득")) %>% 
+  mutate(가구_16 = 가구_16/10^4)
+
+hh_items_v <- hh_16_df %>% 
+  select(가계수지항목) %>% unlist
+hh_value_v <- hh_16_df %>% 
+  select(가구_16) %>% unlist  
+
+names(hh_value_v) <- hh_items_v
+
+hh_income_10 <- waffle(hh_value_v/2, rows=10, legend_pos = "right", xlab="정사각형 1개 = 2만원",
+         title="10분위 가구당 가계수지 - 소득 (2016)")
+
+## 3.4. 결합
+iron(hh_income_1, hh_income_mean, hh_income_10)
+```
+
+### 7.2. 가계지출 {#waffle-expenditure}
+
+가계지출을 대표 분위별로 뽑아서 가장 영향력 높은 13개 항목 중 지출비중이 높은 8개를 추린다.
+가계지출의 원천을 각 분위별로 최하, 평균, 최상을 뽑아 와플 그래프로 시각화한다.
+
+``` {r waffle-expenditure}
+# 4. 지출 데이터----------------------------
+## 4.1. 1 분위 소득 -------------------------------
+hh_exp_16_df <- hh_df %>% select(월소득10분위별,가계수지항목, 가구_16) %>% 
+  filter(str_detect(월소득10분위별, "１분위")) %>% 
+  filter(str_detect(가계수지항목, "^[0-9]|비소비지출")) %>% 
+  filter(!str_detect(가계수지항목, "11.음식|12.기타상품|03.의류|05.가정용품|07.교통")) %>% 
+  mutate(가계수지항목 = str_replace_all(가계수지항목, "\\s|\\(원\\)", "")) %>% 
+  mutate(가구_16 = 가구_16/10^4)
+
+hh_exp_items_v <- hh_exp_16_df %>% 
+  select(가계수지항목) %>% unlist
+hh_exp_value_v <- hh_exp_16_df %>% 
+  select(가구_16) %>% unlist  
+
+names(hh_exp_value_v) <- hh_exp_items_v
+
+hh_exp_1 <- waffle(hh_exp_value_v * 2, rows=10, legend_pos = "right", xlab="정사각형 1개 = 0.5만원",
+                      title="1분위 가계 - 지출 (2016)")
+
+## 4.2. 평균 지출 -------------------------------
+hh_exp_16_df <- hh_df %>% select(월소득10분위별,가계수지항목, 가구_16) %>% 
+  filter(str_detect(월소득10분위별, "전체  평균")) %>% 
+  filter(str_detect(가계수지항목, "^[0-9]|비소비지출")) %>% 
+  filter(!str_detect(가계수지항목, "11.음식|12.기타상품|03.의류|05.가정용품|07.교통")) %>% 
+  mutate(가계수지항목 = str_replace_all(가계수지항목, "\\s|\\(원\\)", "")) %>% 
+  mutate(가구_16 = 가구_16/10^4)
+
+hh_exp_items_v <- hh_exp_16_df %>% 
+  select(가계수지항목) %>% unlist
+hh_exp_value_v <- hh_exp_16_df %>% 
+  select(가구_16) %>% unlist  
+
+names(hh_exp_value_v) <- hh_exp_items_v
+
+hh_exp_mean <- waffle(hh_exp_value_v, rows=10, legend_pos = "right", xlab="정사각형 1개 = 1만원",
+       title="평균 가계 - 지출 (2016)")
+
+## 4.3. 1 분위 지출 -------------------------------
+hh_exp_16_df <- hh_df %>% select(월소득10분위별,가계수지항목, 가구_16) %>% 
+  filter(str_detect(월소득10분위별, "１０분위")) %>% 
+  filter(str_detect(가계수지항목, "^[0-9]|비소비지출")) %>% 
+  filter(!str_detect(가계수지항목, "11.음식|12.기타상품|03.의류|05.가정용품|07.교통")) %>% 
+  mutate(가계수지항목 = str_replace_all(가계수지항목, "\\s|\\(원\\)", "")) %>% 
+  mutate(가구_16 = 가구_16/10^4)
+
+hh_exp_items_v <- hh_exp_16_df %>% 
+  select(가계수지항목) %>% unlist
+hh_exp_value_v <- hh_exp_16_df %>% 
+  select(가구_16) %>% unlist  
+
+names(hh_exp_value_v) <- hh_exp_items_v
+
+hh_exp_10 <- waffle(hh_exp_value_v/2, rows=10, legend_pos = "right", xlab="정사각형 1개 = 2만원",
+       title="10분위 가계 - 지출 (2016)")
+
+## 4.4. 결합
+iron(hh_exp_1, hh_exp_mean, hh_exp_10)
+```
