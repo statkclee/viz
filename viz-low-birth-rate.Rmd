@@ -2,7 +2,6 @@
 layout: page
 title: 데이터 시각화
 subtitle: 저출산과 소요예산 - 상관관계
-runtime: shiny
 output:
   html_document: 
     toc: yes
@@ -20,6 +19,7 @@ library(tidyverse)
 library(digitizeR)
 library(extrafont)
 library(hrbrthemes)
+library(gridExtra)
 loadfonts()
 
 par(family = 'NanumGothic')
@@ -176,9 +176,48 @@ summary(birth_budget_sejon_jeju_lm)
 
 `r paste("y=", round(coef(birth_budget_sejon_jeju_lm)[1],4), "+", round(coef(birth_budget_sejon_jeju_lm)[2],4), "x")`
 
-이를 인터랙티브하게 시각적으로 비교해보자.
 
 ```{r birth-rate-shiny, echo=FALSE}
+reproduced_gg <- birth_budget_df %>% 
+  ggplot(aes(x=`소요예산비율`, y=`합계출산율`)) +
+    geom_point(size=2, color="skyblue") +
+    geom_smooth(method="lm", se=FALSE) +
+    ggrepel::geom_label_repel(aes(label = `시도`), data = birth_budget_df,
+                              size = 5.5,
+                              label.size = 0,
+                              segment.color=NA) +
+    theme_ipsum(base_family = "NanumGothic", grid="Y") +
+    labs(x="소요예산비율", y="합계출산율",
+         title="저출산 대응 자체사업 소요예산 비율과 합계출산율",
+         subtitle="2014~2016년 평균") +
+    scale_x_continuous(breaks=seq(0,5,0.5), limits=c(0,5)) +
+    scale_y_continuous(breaks=seq(0.8,1.8,0.1), limits=c(0.8,1.8)) +
+    theme(panel.grid.major = element_line(colour="gray", linetype="dashed", size=1))
+
+realistic_gg <- birth_budget_sejon_jeju_df %>% 
+  ggplot(aes(x=`소요예산비율`, y=`합계출산율`)) +
+  geom_point(size=2, color="skyblue") +
+  geom_smooth(method="lm", se=FALSE) +
+  ggrepel::geom_label_repel(aes(label = `시도`), data = birth_budget_sejon_jeju_df,
+                            size = 5.5,
+                            label.size = 0,
+                            segment.color=NA) +
+  theme_ipsum(base_family = "NanumGothic", grid="Y") +
+  labs(x="소요예산비율", y="합계출산율",
+       title="저출산 대응 자체사업 소요예산 비율과 합계출산율",
+       subtitle="2014~2016년 평균, 세종과 제주 제외") +
+  scale_x_continuous(breaks=seq(0,3,0.5), limits=c(0,3)) +
+  scale_y_continuous(breaks=seq(0.8,1.8,0.1), limits=c(0.8,1.8)) +
+  theme(panel.grid.major = element_line(colour="gray", linetype="dashed", size=1))
+
+grid.arrange(reproduced_gg, realistic_gg, ncol=2)
+```
+
+이를 인터랙티브하게 시각적으로 비교하는 다음과 같이 작성한다. 특히 `yaml` 헤더에 `runtime: shiny`를 추가하는 것을 잊지 않는다.인터랙티브 그래프를 반영하여 작성한 작성한 코드는 다음과 같다.
+
+<img src="fig/birth-rate-interactive-shiny.png" alt="저출산 Shiny 인터랙티브 버젼" width="77%" />
+
+```{r birth-rate-shiny-code, eval=FALSE}
 
 inputPanel(
         radioButtons("regresion_button", "회귀분석 선택",
