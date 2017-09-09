@@ -39,6 +39,7 @@ title: 데이터 과학 -- 시각화
     - [제19대 국회 본회의 출석부 - joyplot](viz-ggjoy.html)
     - [북한 미사일 발사 연대기](viz-nk-missile.html)
     - [남북한 군사력 비교 - 와플(Waffle)](viz-waffle-military.html)
+    - [저출산과 소요예산 - 상관관계](viz-low-birth-rate.html)
 
 ### [xwMOOC 오픈 교재](https://statkclee.github.io/xwMOOC/)
 
