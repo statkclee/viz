@@ -38,6 +38,7 @@ title: 데이터 과학 -- 시각화
     - [가구당 가계수지 - 10 분위별](viz-household-balance-deciles.html)
     - [제19대 국회 본회의 출석부 - joyplot](viz-ggjoy.html)
     - [북한 미사일 발사 연대기](viz-nk-missile.html)
+    - [북한 미사일 발사 분석](viz-nk-missile-overview.html)
     - [남북한 군사력 비교 - 와플(Waffle)](viz-waffle-military.html)
     - [저출산과 소요예산 - 상관관계](viz-low-birth-rate.html)
 
