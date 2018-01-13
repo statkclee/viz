@@ -1,0 +1,132 @@
+---
+layout: page
+title: xwMOOC 데이터 과학
+subtitle: 대한민국 인구변화(2000 vs 2015) - treemap
+date: "`r Sys.Date()`"
+author: xwMOOC
+output:
+  html_document: 
+    toc: yes
+    highlight: tango
+    code_folding: hide
+    css: css/swc.css
+  pdf_document:
+    latex_engine: xelatex
+mainfont: NanumGothic
+---
+
+``` {r, include=FALSE}
+source("tools/chunk-options.R")
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+
+
+```
+
+
+## 1. 대한민국의 인구순 도시 목록 {#wiki-pop-by-city}
+
+대한민국의 인구순 도시를 정리한 데이터를 [위키 웹페이지](https://ko.wikipedia.org/wiki/%EB%8C%80%ED%95%9C%EB%AF%BC%EA%B5%AD%EC%9D%98_%EC%9D%B8%EA%B5%AC%EC%88%9C_%EB%8F%84%EC%8B%9C_%EB%AA%A9%EB%A1%9D)에서 
+가져와서 `treemap`으로 시각화하면 광역시도와 각 도에 포함된 시인구에 대한 정보를 쉽게 파악할 수 있다.
+위키 웹페이지에 표현된 데이터는 5년마다 조사되는 인구주택총조사(센서스)에 근거한 것으로, 인구주택총조사 결과는 국가통계포털에서 확인할 수 있다.
+
+
+## 2. 데이터 긁어와서 정제 {#wiki-pop-by-city-crawl-preprocessing}
+
+`rvest` 팩키지에서 데이터를 가져와서 이를 `treemap`으로 처리가 가능한 형태로 가공한다.
+
+``` {r pop-city-setup}
+# 0. 환경설정 -----
+library(rvest)
+library(stringr)
+library(tidyverse)
+library(treemap)
+library(d3treeR) # devtools::install_github("timelyportfolio/d3treeR")
+library(extrafont)
+loadfonts()
+
+# 1. 데이터 가져오기 -----
+
+Sys.setlocale("LC_ALL", "C")
+
+url <- "https://ko.wikipedia.org/wiki/%EB%8C%80%ED%95%9C%EB%AF%BC%EA%B5%AD%EC%9D%98_%EC%9D%B8%EA%B5%AC%EC%88%9C_%EB%8F%84%EC%8B%9C_%EB%AA%A9%EB%A1%9D"
+
+pop_dat <- read_html(url) %>% 
+  html_nodes(xpath = '//*[@id="mw-content-text"]/div/table') %>% 
+  html_table(fill = TRUE) %>% 
+  .[[1]]
+
+Sys.setlocale("LC_ALL", "Korean")
+
+# 2. 데이터 정제과정 -----
+
+names(pop_dat) <- c("순위", "행정구역", "지역", "2015년", "2010년", "2005년", "2000년")
+
+pop_df <- pop_dat %>% 
+  mutate(`2015년` = str_replace_all(`2015년`, ",", "") %>% as.integer, 
+         `2010년` = str_replace_all(`2010년`, ",", "") %>% as.integer, 
+         `2005년` = str_replace_all(`2005년`, ",", "") %>% as.integer, 
+         `2000년` = str_replace_all(`2000년`, ",", "") %>% as.integer) %>% 
+  separate(행정구역, into=c("광역시도", "시군"), sep=" ") %>% 
+  mutate(시군 = str_replace_all(시군, "\\[[0-9].*\\]", "")) %>% 
+  mutate(지역 = factor(지역))
+
+pop_df %>% 
+  DT::datatable() %>% 
+    DT::formatCurrency(c("2015년", "2010년", "2005년", "2000년"), currency="", digits=0)
+```
+
+## 3. 2015년 광역시도 인구 {#wiki-pop-by-city-2015}
+
+먼저 2015년 광역시도 인구를 살펴보자.
+
+``` {r pop-city-2015}
+# 3. 데이터 시각화 -----
+## 3.1. 2015년: treemap 정적 그래프 
+pop_2015_treemap <- treemap(pop_df, 
+                       index = c("광역시도", "시군"),  
+                       vSize = "2015년", 
+                       vColor = "지역",
+                       title = "대한민국 인구, 단위: 명, 2015년", 
+                       fontsize.labels=c(12, 8), 
+                       draw = TRUE,
+                       type = "categorical", 
+                       fontfamily.title = "NanumGothic",
+                       format.legend = list(scientific = FALSE, big.mark = ","),
+                       title.legend="")
+```
+
+`treemap` 인터랙티브 방식으로 파고들어(drilldown)하여 2015년 각 도별로 인구를 살펴보자.
+
+``` {r pop-city-2015-interactive}
+## 3.2. 2015년: treemap 동적 그래프                 
+d3tree2(pop_2015_treemap, rootname = "대한민국")
+```
+
+## 4. 2000년 광역시도 인구 {#wiki-pop-by-city-2000}
+
+먼저 2000년 광역시도 인구를 살펴보자. 15년 사이 인구의 변화를 체감할 수 있다.
+
+``` {r pop-city-2000}
+## 3.3. 2000년: treemap 정적 그래프 
+pop_2000_treemap <- treemap(pop_df, 
+                            index = c("광역시도", "시군"),  
+                            vSize = "2000년", 
+                            vColor = "지역",
+                            title = "대한민국 인구, 단위: 명, 2000년", 
+                            fontsize.labels=c(12, 8), 
+                            draw = TRUE,
+                            type = "categorical", 
+                            fontfamily.title = "NanumGothic",
+                            format.legend = list(scientific = FALSE, big.mark = ","),
+                            title.legend="")
+```
+
+`treemap` 인터랙티브 방식으로 파고들어(drilldown)하여 2000년 각 도별로 인구를 살펴보자.
+
+``` {r pop-city-2000-interactive}
+## 3.4. 2000년: treemap 동적 그래프                 
+
+d3tree2(pop_2000_treemap, rootname = "대한민국")
+```
+
+이를 통해서 서울특별시에서 경기도로 인구가 가장 많은 지역이 바뀐 것은 기본이고 각 시도마다 인구순위 변화가 눈에 확연히 띈다.
