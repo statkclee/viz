@@ -81,11 +81,11 @@ DT::datatable(sido_grdp_df) %>%
 grdp_2016_treemap <- treemap(sido_grdp_df, 
                             index = c("시도", "대분류", "중분류"),  
                             vSize = "2016년", 
-                            # vColor = "2016년",
+                            vColor = "2016년",
                             title = "지역내총생산(GRDP)", 
                             fontsize.labels=c(12, 8), 
                             draw = TRUE,
-                            # type = "value",
+                            type = "value",
                             fontfamily.title = "NanumGothic",
                             format.legend = list(scientific = FALSE, big.mark = ","),
                             title.legend="")
