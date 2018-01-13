@@ -1,0 +1,125 @@
+---
+layout: page
+title: xwMOOC 데이터 과학
+subtitle: 지역내총생산 (GRDP) - treemap
+date: "`r Sys.Date()`"
+author: xwMOOC
+output:
+  html_document: 
+    toc: yes
+    highlight: tango
+    code_folding: hide
+    css: css/swc.css
+  pdf_document:
+    latex_engine: xelatex
+mainfont: NanumGothic
+---
+
+``` {r, include=FALSE}
+source("tools/chunk-options.R")
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+
+
+```
+
+
+## 1. 지역내총생산(GRDP)  {#wiki-grdp}
+
+지역내총생산(GRDP: Gross Regional Domestic Product)은 어떤기간 동안 어떠한 지역에서 생산된 상품과 서비스의 가치를 시장가격으로 평가한 수치로 
+지역내총생산이 높다는 것은 그 지역 재정자립도가 높다는 것을 의미하고 반대로 지역내총생산이 낮다는 것은 재정자립도가 낮아 중앙정부의 지원이 필요하다는 것을 의미한다. 
+국내에선 통계청이 1985년부터 16개 광역 시·도의 GRDP를 산출해 발표하고 있으며 지역 경제 분석과 정책 수립에 필요한 기초자료로 활용한다. 
+국가로 치면 국내총생산(GDP)과 같은 개념이다.
+
+[데이터 과학자와 함께 하는 제19대 대통령 선거 - 지역내총생산(GRDP) 변화](http://statkclee.github.io/politics/pe-grdp.html)를 참조하면 1985년부터 16개 광역시도 GRDP 연도별 변화를 살펴볼 수 있다.
+
+## 2. 데이터 가져와서 정제 {#wiki-grdp-by-sido-import-preprocessing}
+
+자료는 통계청 http://kosis.kr/ “국내통계 &rarr; 주제별통계 &rarr; 국민계정/지역계정 &rarr; 지역소득(2010년 기준)” 에서 시도 지역내총생산(GRDP) 데이터를 가져온다.
+엑셀 파일을 `treemap` 팩키지가 받아들일 수 있는 적당한 형태로 가공한다.
+
+``` {r pop-city-setup}
+# 0. 환경설정 -----
+library(rvest)
+library(readxl)
+library(stringr)
+library(xts)
+library(tidyverse)
+library(gridExtra)
+library(treemap)
+library(d3treeR) # devtools::install_github("timelyportfolio/d3treeR")
+library(extrafont)
+loadfonts()
+
+# 1. 데이터 가져오기 -----
+
+sido_grdp_dat <- read_excel("data/행정구역_시도_별_경제활동별_지역내총생산_20180113231512.xlsx", sheet="데이터", skip=1)
+
+# 2. 데이터 정제 -----
+
+names(sido_grdp_dat) <- c("시도", "경제활동", "1985년", "1995년", "2005년", "2016년")
+
+sido_grdp_df <- sido_grdp_dat %>% 
+  mutate(시도 = na.locf(시도)) %>% 
+  filter(시도 != "전국") %>% 
+  filter(!경제활동 %in% c("지역내총생산(시장가격)", "총부가가치(기초가격)")) %>% 
+  mutate(대분류 = ifelse(경제활동 == "순생산물세", "순생산물세", "총부가가치")) %>% 
+  rename(중분류 = 경제활동) %>% 
+  select(시도, 대분류, 중분류, everything()) %>% 
+  mutate_if(is.character, as.factor)
+
+DT::datatable(sido_grdp_df) %>% 
+  DT::formatCurrency(c("1985년", "1995년", "2005년", "2016년"), currency="", digits=0)
+```
+
+## 3. 2016년 광역시도 지역내총생산(GRDP) {#sido-grdp-2016}
+
+먼저 2016년 광역시도 지역내 총생산을 살펴보자.
+
+``` {r grdp-sido-2016}
+# 3. 시도별 GRDP 시각화 -----
+## 3.1. 2016년: treemap 정적 그래프 
+grdp_2016_treemap <- treemap(sido_grdp_df, 
+                            index = c("시도", "대분류", "중분류"),  
+                            vSize = "2016년", 
+                            # vColor = "2016년",
+                            title = "지역내총생산(GRDP)", 
+                            fontsize.labels=c(12, 8), 
+                            draw = TRUE,
+                            # type = "value",
+                            fontfamily.title = "NanumGothic",
+                            format.legend = list(scientific = FALSE, big.mark = ","),
+                            title.legend="")
+```
+
+`treemap` 인터랙티브 방식으로 파고들어(drilldown)하여 2016년 각 시도별 지역내 총생산을 살펴보자.
+
+``` {r grdp-sido-2016-interactive}
+## 3.2. 2016년: treemap 동적 그래프                 
+d3tree3(grdp_2016_treemap, rootname = "대한민국")
+```
+
+## 4. 1985년 광역시도 지역내총생산(GRDP) {#sido-grdp-1985}
+
+먼저 1985년 광역시도 지역내총생산을 살펴보자. 30년 사이 지역내총생산(GRDP) 변화를 체감할 수 있다.
+
+``` {r grdp-sido-1985}
+## 3.3. 1985년: treemap 정적 그래프 
+grdp_1985_treemap <- treemap(sido_grdp_df, 
+                             index = c("시도", "대분류", "중분류"),  
+                             vSize = "1985년", 
+                             vColor = "1985년",
+                             title = "지역내총생산(GRDP)", 
+                             fontsize.labels=c(12, 8), 
+                             draw = TRUE,
+                             type = "value",
+                             fontfamily.title = "NanumGothic",
+                             format.legend = list(scientific = FALSE, big.mark = ","),
+                             title.legend="")
+```
+
+`treemap` 인터랙티브 방식으로 파고들어(drilldown)하여 1985년 각 시도별 지역내 총생산을 살펴보자.
+
+``` {r grdp-sido-1985-interactive}
+## 3.4. 1985년: treemap 동적 그래프                 
+d3tree2(grdp_1985_treemap, rootname = "대한민국")
+```

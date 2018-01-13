@@ -41,7 +41,9 @@ title: 데이터 과학 -- 시각화
     - [북한 미사일 발사 분석](viz-nk-missile-overview.html)
     - [남북한 군사력 비교 - 와플(Waffle)](viz-waffle-military.html)
     - [저출산과 소요예산 - 상관관계](viz-low-birth-rate.html)
-    - [대한민국 인구변화(2000 vs 2015) - treemap](viz-pop-treemap.html)
+    - **treemap**
+        - [대한민국 인구변화(2000 vs 2015) - treemap](viz-pop-treemap.html)
+        - [지역내총생산 (GRDP) - treemap](viz-grdp-treemap.html)
 
 ### [xwMOOC 오픈 교재](https://statkclee.github.io/xwMOOC/)
 
