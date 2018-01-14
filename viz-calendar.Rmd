@@ -1,0 +1,165 @@
+---
+layout: page
+title: xwMOOC 데이터 과학
+subtitle: 2018년 달력
+date: "`r Sys.Date()`"
+author: xwMOOC
+output:
+  html_document: 
+    toc: yes
+    highlight: tango
+    code_folding: hide
+    css: css/swc.css
+  pdf_document:
+    latex_engine: xelatex
+mainfont: NanumGothic
+---
+
+``` {r, include=FALSE}
+source("tools/chunk-options.R")
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+
+```
+
+
+## 1. 공휴일 달력 만들기 {#holiday-calendar}
+
+매년 새해가 되면 나름대로 계획을 세우고 이를 달력에 표시한다. `ggplot`을 통해 달력을 만드는 것이 일반적이지는 않지만 가능하다.
+
+## 2. 공공데이터 휴일 정보 데이터 {#holiday-calendar-api}
+
+### 2.1. 환경설정 {#holiday-calendar-setup}
+
+먼저 달력만들기 위해서 필요한 R 팩키지 [ggcal](https://github.com/jayjacobs/ggcal)를 가져와서 한글 관련 몇가지 설정을 한다.
+그리고, [공공데이터 포털](https://www.data.go.kr/)에서 "특일 정보" 라는 제목으로 API 를 제공(https://www.data.go.kr/dataset/15012690/openapi.do)하고 있어 
+이를 R에서 받아오는데 필요한 몇가지 팩키지와 데이터 전처리에 필요한 몇가지 팩키지를 설치한다.
+
+
+``` {r open-holiday-api-setup}
+# 0. 환경설정 -----
+library(glue)
+library(XML)
+library(stringr)
+library(purrr)
+library(tidyverse)
+library(ggcal)
+library(lubridate)
+library(extrafont)
+loadfonts()
+
+ggcal <- function(dates, fills) {
+  # get ordered vector of month names
+  months <- format(seq(as.Date("2016-01-01"), as.Date("2016-12-01"), by="1 month"), "%B")
+  
+  # get lower and upper bound to fill in missing values
+  mindate <- as.Date(format(min(dates), "%Y-%m-01"))
+  maxdate <- (seq(as.Date(format(max(dates), "%Y-%m-01")), length.out = 2, by="1 month")-1)[2]
+  # set up tibble with all the dates.
+  filler <- tibble(date = seq(mindate, maxdate, by="1 day"))
+  
+  t1 <- tibble(date = dates, fill=fills) %>%
+    right_join(filler, by="date") %>% # fill in missing dates with NA
+    mutate(dow = as.numeric(format(date, "%w"))) %>%
+    mutate(month = format(date, "%B")) %>%
+    mutate(woy = as.numeric(format(date, "%U"))) %>%
+    mutate(year = as.numeric(format(date, "%Y"))) %>%
+    mutate(month = factor(month, levels=months, ordered=TRUE)) %>%
+    arrange(year, month) %>%
+    mutate(monlabel=month)
+  
+  if (length(unique(t1$year))>1) { # multi-year data set
+    t1$monlabel <- paste(t1$month, t1$year)
+  }
+  
+  t2 <- t1 %>%
+    mutate(monlabel = factor(monlabel, ordered=TRUE)) %>%
+    mutate(monlabel = fct_inorder(monlabel)) %>%
+    mutate(monthweek = woy-min(woy),
+           y=max(monthweek)-monthweek+1)
+  
+  # weekdays <- c("S", "M", "T", "W", "T", "F", "S")
+  weekdays <- c("일", "월", "화", "수", "목", "금", "토")
+  
+  ggplot(t2, aes(dow, y, fill=fill)) +
+    geom_tile(color="gray80") +
+    facet_wrap(~monlabel, ncol=3, scales="free") +
+    scale_x_continuous(expand=c(0,0), position="top",
+                       breaks=seq(0,6), labels=weekdays) +
+    scale_y_continuous(expand=c(0,0)) +
+    geom_text(aes(dow, y, label = day(dates))) +
+    theme(panel.background=element_rect(fill=NA, color=NA),
+          strip.background = element_rect(fill=NA, color=NA),
+          strip.text.x = element_text(hjust=0, face="bold"),
+          legend.title = element_blank(),
+          axis.ticks=element_blank(),
+          axis.title=element_blank(),
+          axis.text.y = element_blank(),
+          strip.placement = "outsite",
+          legend.position = "none")
+}
+```
+
+### 2.2. 공공데이터 API에서 특일 정보(공휴일) 데이터를 가져오기 [^holiday-api] {#holiday-calendar-setup}
+
+[^holiday-api]: [공휴일 확인하기 : 공공데이터포털 API 예제, 작성자 Curycu](https://blog.naver.com/hancury/221057426711)
+
+발급받은 API키를 넣어 `holiday_request()` 함수로 API 던질 url 주소를 준비하고 나서 리스트(res_list)로 데이터를 받아낸다. **발급받은 API키**가 외부에 노출되지 않도록 특별히 신경쓴다. 여기서는 API키를 한번만 사용하고 다시 재발급 받아서 설사 외부에 노출되더라도 문제가 없도록 한다.
+그리고 나서 `purrr` 팩키지 함수형 프로그래밍을 통해 리스트를 데이터프레임으로 변환시키고 나서 2018년 달력을 만들어낸다.
+
+공공데이터 포털 API에서 전달받은 공휴일 정보를 2018년 달력에 붙여 넣은 후에 `ggcal` 함수에 넣어 달력을 완성한다.
+
+``` {r open-holiday-api-mudging}
+# 1. 데이터 가져오기 -----
+## 1.1. 공공데이터 휴일 데이터 API ------
+
+api_key <- '82ZBDzNz7v2x5Tm%2F3iVW%2BTD%2BKAmnqDN686GYu6EH4bjrZJvUkQAsfa4qbulgCnfJMOwB9UwqH9ozR8EfcbrvCg%3D%3D'
+
+url_format <- 'http://apis.data.go.kr/B090041/openapi/service/SpcdeInfoService/getRestDeInfo?ServiceKey={key}&solYear={year}&solMonth={month}'
+
+holiday_request <- function(key, year, month){
+  glue(url_format)
+} 
+
+# 2. 데이터 정리 -----
+## 2.1. 공공데이터 API 데이터 --> 데이터프레임 변환 
+res_list <- list()
+
+for(m in 1:12){
+  data <- xmlToList(holiday_request(api_key, 2018, str_pad(m, 2, pad=0)))
+  items <- data$body$items
+  
+  res_list <- append(res_list, items)
+}
+
+holiday_df <- res_list %>% 
+  tibble(
+    휴일명 = map_chr(., "dateName"),
+    휴일   = map_chr(., "locdate")
+  ) %>% 
+  select(휴일명, 휴일) %>% 
+  mutate(휴일 = lubridate::ymd(휴일))
+
+## 2.2. 2018년 달력 ------
+
+cal_2018_df <- tibble(휴일 = seq(as.Date("2018-01-01"), as.Date("2018-12-31"), by="1 day"))
+cal_2018_df <- left_join(cal_2018_df, holiday_df, by="휴일")
+
+cal_2018_df <- cal_2018_df %>% 
+  mutate(휴일구분 = ifelse(weekdays(휴일) %in% c("월요일", "화요일", "수요일", "목요일", "금요일"), "주중", "휴일"),
+         휴일구분 = ifelse(is.na(휴일명), 휴일구분, "공휴일"))
+```
+
+## 3. 대한민국 2018년 달력 {#holiday-calendar-viz}
+
+`ggcal` 함수에 `scale_fill_manual` 색상을 넣어 대한민국 2018년 달력을 완성시킨다.
+
+
+``` {r open-holiday-ggcal}
+# 3. 2018년 달력 시각화 ------
+
+ggcal(cal_2018_df$휴일, cal_2018_df$휴일구분) +
+  scale_fill_manual(values=c("주중"="steelblue", "휴일"="lightsteelblue", "공휴일"="#ff3d3d"))
+```
+
+
+
