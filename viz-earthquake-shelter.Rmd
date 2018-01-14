@@ -1,0 +1,93 @@
+---
+layout: page
+title: xwMOOC 데이터 과학
+subtitle: 지진해일 대피소 - crosstalk
+date: "`r Sys.Date()`"
+author: xwMOOC
+output:
+  html_document: 
+    toc: yes
+    highlight: tango
+    code_folding: hide
+    css: css/swc.css
+  pdf_document:
+    latex_engine: xelatex
+mainfont: NanumGothic
+---
+
+``` {r, include=FALSE}
+source("tools/chunk-options.R")
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+
+```
+
+
+## 1. 지진해일 대피소 {#viz-earthquake-shelter}
+
+동해안을 끼고 있는 강원도와 경상도 주민들에게 일본에서 겪고 있는 지진해일은 남의 일이 아닐 수 있다.
+공공데이터를 통해 [지진해일 긴급대피소(2017.10.25.)](https://www.data.go.kr/dataset/3058512/fileData.do) 정보를 제공하고 있다. 
+
+
+## 2. 지진해일 대피소 시각화 {#viz-earthquake-shelter-crosstalk}
+
+공공데이터를 "EUC-KR", "CP-949", "UTF-8"등 다양한 방식으로 인코딩하여 제공하는지 이유는 알 수 없지만, IT강국이라 이러한 사실은 이해하고 넘어가자.
+데이터를 불러왔다면 [`crosstalk`](https://rstudio.github.io/crosstalk/using.html)를 활용하여 시도명을 기준으로 지진해일 대피소에 대한 전반적인 상황을 
+살펴보자.
+
+강원도, 경상북도, 울산광역시, 부산광역시 4개 광역시도에 걸쳐 지진해일 대피소가 존재하기 때문에 **시도** 드롭박스를 활용하여 지진대피소 위치를 파악하면 도움이 될 수 있다.
+
+``` {r earthquake-leaflet}
+# 0. 환경설정 -----
+library(tidyverse)
+library(leaflet)
+library(crosstalk)
+library(DT)
+
+# 1. 데이터 가져오기 -----
+# guess_encoding("data/지진해일대피소_20171025(1).csv")
+shelter_df <- read.csv("data/지진해일대피소_20171025(1).csv", encoding = "EUC-KR", stringsAsFactor = FALSE) %>% 
+  tbl_df
+
+shelter_df <- shelter_df %>% 
+  rename(longitude=경도, latitude=위도)
+
+
+# 2. 데이터 정제 ------
+shelter_sd <- SharedData$new(shelter_df)
+
+filter_select("시도명", "시도", shelter_sd, ~시도명)
+
+bscols(
+  leaflet(data = shelter_sd) %>% 
+    addProviderTiles(providers$OpenStreetMap) %>% 
+    addMarkers(),
+  
+  datatable(shelter_sd,
+            options=list(columnDefs = list(list(visible=FALSE,targets=c(1,3,5,6,7,8,14,15)))))
+)
+```
+
+## 3. 지진해일 대피소 데이터 오류 {#viz-earthquake-shelter-crosstalk-error}
+
+지진해일 대피소 데이터를 시각화하면서 강원도임에 불구하고 부산광역시 기장군에 속해 있는 지진 대피소가 있는 것이 확인되어 이는 공공데이터의 원천 데이터가 잘못된 것이 아닌가 판단이 든다. 
+
+왜냐하면 속초감리교회 위도 `35.21253`로 되어 있는데 이는 대부분의 속초시 지진해일 대피소가 위치한 평균 위도 `r mean(shelter_df$longitude)` 근처가 되어야 하지 않나 판단된다. 만약 지진해일이 발생했을 경우 잘못된 정보가 제공되면 이 자체는 속초시민의 수천수만명의 목숨이 달린 중차대한 문제가 될 수 있다.
+
+``` {r earthquake-leaflet-error}
+# 3. 지진대피소 데이터 오류 ------
+library(ggpubr)
+library(extrafont)
+loadfonts()
+
+shelter_df %>% 
+  filter(시도명 == "강원도") %>% 
+   ggplot(aes(longitude, latitude)) +
+    geom_point() +
+    theme_pubr(base_family = "NanumGothic") +
+    labs(x="경도", y="위도", title="강원도 지진대피소 위도 / 경도")
+
+shelter_df %>% 
+  filter(시도명 == "강원도") %>% 
+  filter(latitude < 36) %>% 
+  datatable()
+```   
