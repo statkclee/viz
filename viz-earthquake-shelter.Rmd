@@ -91,3 +91,12 @@ shelter_df %>%
   filter(latitude < 36) %>% 
   datatable()
 ```   
+
+### 3.1. 공공데이터 오류 수정 방법 {#viz-earthquake-shelter-crosstalk-error-correction}
+
+공공데이터의 오류가 발생했을 경우, 
+공공데이터 포털의 오류가 있는 데이터가 위치한 곳([지진해일 긴급대피소 현황 ](https://www.data.go.kr/dataset/3058512/fileData.do))으로 가서 **오류신고** 버튼을 클릭하여 신고한다.
+
+<img src="fig/viz-data-go-kr-shelter.png" alt="공공데이터 오류 수정" width="100%" />
+
+
