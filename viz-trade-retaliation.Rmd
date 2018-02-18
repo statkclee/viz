@@ -1,0 +1,148 @@
+---
+layout: page
+title: xwMOOC 데이터 과학
+subtitle: 무역보복 - UN Comtrade API
+date: "`r Sys.Date()`"
+author: xwMOOC
+output:
+  html_document: 
+    toc: yes
+    highlight: tango
+    code_folding: hide
+    css: css/swc.css
+  pdf_document:
+    latex_engine: xelatex
+mainfont: NanumGothic
+---
+
+``` {r, include=FALSE}
+source("tools/chunk-options.R")
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+
+```
+
+
+## 1. 대한민국 수출입 상위 5개국 {#top-five-country}
+
+[United Nations Comtrade API](https://comtrade.un.org/data/)를 R 팩키지 
+[comtradr: Interface with the United Nations Comtrade API](https://cran.r-project.org/web/packages/comtradr/index.html)로 구현이 되어 있어
+R에서 쉽게 무역데이터를 분석할 수 있다. 데이터를 분석하는 2016년이 가장 최근 데이터로 조만간 2017년 데이터도 갱신될 것으로 기대된다.
+대한민국이 수출, 수입하는 상대 5개국을 대상으로 무역 파트너로 뜨는 국가와 저물어가는 국가를 살펴보자.
+
+### 1.1. `comtradr` 대한민국 수출입 데이터 {#top-five-country-data}
+
+대한민국 수출입 무역 실적 데이터를 시각화하는데 필요한 팩키지를 설치하고 `ct_search()` 함수에 
+`reporters`, `partners`, `trade_direction` 등 인자에 적절한 값을 넣어 주어 원하는 무역데이터를 가져온다.
+
+그리고, 수출, 수입 데이터프레임을 제작하는데 `top_n()` 함수를 통해 상위 5개국을 추출한다. 이유는 API에서 최대 5개국만 허용되기 때문이다.
+
+``` {r comtradr-setup}
+# 0. 환경설정 -----
+library(plotly)
+library(tidyverse)
+library(comtradr)
+library(ggthemes)
+library(extrafont)
+loadfonts()
+library(crosstalk)
+
+# 1. 데이터 가져오기 -----
+
+trade_df <- ct_search(reporters = "Rep. of Korea", 
+               partners = "all", 
+               start_date = "2016-01-01", 
+               end_date = "2016-12-31",
+               trade_direction = "all") %>% as_tibble()
+  
+## 1.1. 대한민국 수출 상위 5개국 -----
+
+export_top_5 <- trade_df %>% 
+  filter(trade_flow == "Export",
+         partner != "World") %>% 
+  top_n(5, trade_value_usd) %>% 
+  pull(partner)
+
+trade_export_df <- ct_search(reporters = "Rep. of Korea", 
+                      partners = c("China", "China, Hong Kong SAR", "Japan", "Viet Nam", "USA"),
+                      trade_direction = "export") %>% as_tibble()
+
+## 1.2. 대한민국 수입 상위 5개국 -----
+
+import_top_5 <- trade_df %>% 
+  filter(trade_flow == "Import",
+         partner != "World") %>% 
+  top_n(5, trade_value_usd) %>% 
+  pull(partner)
+
+trade_import_df <- ct_search(reporters = "Rep. of Korea", 
+                             partners = c("China", "Germany", "Japan", "Other Asia, nes", "USA"),
+                             trade_direction = "import") %>% as_tibble()
+```
+
+### 1.2. 인터랙티브 대한민국 수출입 금액 시각화 {#top-five-country-interactive}
+
+대한민국 수출 및 수입 금액이 미화로 되어 있고 단위가 매우 크기 때문에 $10^9$ billion 달러로 한화로 1조에 상당한 단위로 변환시킨다.
+그리고 `crosstalk` 팩키지 활용 작업흐름인 공유데이터, 제어, 시각화 혹은 표, 그리고 인터랙티브 시각화로 마무리 한다.
+
+#### 1.2.1. 인터랙티브 대한민국 수출금액 시각화 {#top-five-country-interactive-export}
+
+
+``` {r comtradr-interactive-export}
+# 3. 수출 인터랙티브 데이터 시각화 -----
+## 3.1. 공유 데이터
+trade_exp_df <- trade_export_df %>% 
+  mutate(trade_value_usd = trade_value_usd / 10^9) %>% 
+  mutate(year = lubridate::make_date(year = year)) %>% 
+  mutate(partner = case_when(str_detect(partner, "Hong Kong") ~ "Hong Kong",
+                             str_detect(partner, "Other Asia") ~ "Other Asia",
+                             TRUE ~ partner))
+
+trade_exp_sd <- SharedData$new(trade_exp_df)
+
+## 3.2. 제어
+filter_checkbox("partner", "국가", trade_exp_sd, ~partner, inline=TRUE)
+
+## 3.3. 시각화
+trade_exp_g <- ggplot(trade_exp_sd, aes(x=year, y = trade_value_usd, group=1, color = factor(`partner`))) +
+  geom_point(size = 2) +
+  geom_line(size = 1) +
+  labs(title = "한국발 수출 상위 5개국 실적", x="", y="수출액 (Billion USD ~ 조)", color="국가명") +
+  theme_bw(base_family="NanumGothic")
+
+trade_exp_gg <- ggplotly(trade_exp_g)
+
+## 3.4. 인터랙티브시각화
+bscols(trade_exp_gg)
+```
+
+#### 1.2.2. 인터랙티브 대한민국 수입금액 시각화 {#top-five-country-interactive-import}
+
+
+``` {r comtradr-interactive-import}
+# 4. 수입 인터랙티브 데이터 시각화 -----
+## 4.1. 공유 데이터
+trade_imp_df <- trade_import_df %>% 
+  mutate(trade_value_usd = trade_value_usd / 10^9) %>% 
+  mutate(year = lubridate::make_date(year = year)) %>% 
+  mutate(partner = case_when(str_detect(partner, "Hong Kong") ~ "Hong Kong",
+                             str_detect(partner, "Other Asia") ~ "Other Asia",
+                             TRUE ~ partner))
+
+trade_imp_sd <- SharedData$new(trade_imp_df)
+
+## 4.2. 제어
+filter_checkbox("partner", "국가", trade_imp_sd, ~partner, inline=TRUE)
+
+## 3.3. 시각화
+trade_imp_g <- ggplot(trade_imp_sd, aes(x=year, y = trade_value_usd, group=1, color = factor(`partner`))) +
+  geom_point(size = 2) +
+  geom_line(size = 1) +
+  labs(title = "한국발 수입 상위 5개국 실적", x="", y="수입액 (Billion USD ~ 조)", color="국가명") +
+  theme_bw(base_family="NanumGothic")
+
+trade_imp_gg <- ggplotly(trade_imp_g)
+
+## 3.4. 인터랙티브시각화
+bscols(trade_imp_gg)
+```
+
