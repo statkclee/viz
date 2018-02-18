@@ -87,7 +87,7 @@ trade_import_df <- ct_search(reporters = "Rep. of Korea",
 #### 1.2.1. 인터랙티브 대한민국 수출금액 시각화 {#top-five-country-interactive-export}
 
 
-``` {r comtradr-interactive-export}
+``` {r comtradr-interactive-export, fig.width=12}
 # 3. 수출 인터랙티브 데이터 시각화 -----
 ## 3.1. 공유 데이터
 trade_exp_df <- trade_export_df %>% 
@@ -118,7 +118,7 @@ bscols(trade_exp_gg)
 #### 1.2.2. 인터랙티브 대한민국 수입금액 시각화 {#top-five-country-interactive-import}
 
 
-``` {r comtradr-interactive-import}
+``` {r comtradr-interactive-import, fig.width=12}
 # 4. 수입 인터랙티브 데이터 시각화 -----
 ## 4.1. 공유 데이터
 trade_imp_df <- trade_import_df %>% 
