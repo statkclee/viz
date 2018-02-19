@@ -146,3 +146,140 @@ trade_imp_gg <- ggplotly(trade_imp_g)
 bscols(trade_imp_gg)
 ```
 
+## 2. 주요 3국 대상국가 수출입 및 무역수지 추정 규모 {#main-three-country}
+
+
+### 2.1. `treemap` 시각화를 위한 환경설정 {#main-three-country-setup}
+
+주요 3국 한국, 미국, 중국을 대상으로 수출, 수입, 무역수지(수출-수입) 추정 무역교역금액을 `treemap`으로 시각화한다.
+국가명을 넣으면 수출, 수입, 무역수지에 대한 `treemap`을 자동으로 반환하는 함수를 생성한다.
+
+
+``` {r trade-treemap-setup, fig.width=12}
+# 0. 환경설정 -----
+library(highcharter)
+library(tidyverse)
+library(comtradr)
+library(ggthemes)
+library(extrafont)
+loadfonts()
+
+# 1. 국제무역 Treemap 함수 -----
+
+trade_treemap_fn <- function(country) {
+  # 1.1. 데이터 가져오기 -----
+  country_df <- ct_search(reporters = country,
+                        partners = "all",
+                        start_date = "2016-01-01", 
+                        end_date = "2016-12-31",
+                        trade_direction = "all") %>% as_tibble()
+  
+  # 1.2. 수출입 통계 -----
+  country_import_tm_df <- country_df %>% 
+    filter(partner != "World") %>% 
+    filter(trade_flow == "Import") %>% 
+    mutate(trade_value_usd = round(trade_value_usd / 10^9,1))
+  
+  import_tm <- hchart(country_import_tm_df, "treemap", hcaes(x = partner, value = trade_value_usd, color = trade_value_usd))
+  
+  country_export_tm_df <- country_df %>% 
+    filter(partner != "World") %>% 
+    filter(trade_flow == "Export") %>% 
+    mutate(trade_value_usd = round(trade_value_usd / 10^9,1))
+  
+  export_tm <- hchart(country_export_tm_df, "treemap", hcaes(x = partner, value = trade_value_usd, color = trade_value_usd))
+  
+  # 1.3. 국가별 무역수지 -----
+  
+  country_import_df <- country_import_tm_df %>% 
+    select(classification, year, import_partner=partner, import_trade_value_usd = trade_value_usd)
+  
+  country_export_df <- country_export_tm_df %>% 
+    select(classification, year, export_partner=partner, export_trade_value_usd = trade_value_usd)
+  
+  country_trade_balance_df <- inner_join(country_import_df, country_export_df, by=c("classification", "year", "import_partner" = "export_partner"))
+  
+  country_trade_balance_df <- country_trade_balance_df %>% 
+    mutate(trade_value_balance_usd = export_trade_value_usd - import_trade_value_usd) %>% 
+    rename(partner = import_partner)
+  
+  trade_balance_tm <- hchart(country_trade_balance_df, "treemap", 
+         hcaes(x = partner, value = abs(trade_value_balance_usd), color = trade_value_balance_usd)) %>% 
+    hc_colorAxis(stops = color_stops(10, RColorBrewer::brewer.pal(10, "RdBu"))) 
+  
+  return(list(import_tm = import_tm, export_tm = export_tm, trade_balance_tm = trade_balance_tm))
+}
+```
+
+### 2.2. 한국 수출, 수입, 무역수지 {#main-three-country-korea}
+
+#### 2.2.1. 한국 수출 {#main-three-country-korea-export}
+
+``` {r trade-treemap-korea-export, fig.width=12}
+# 2. 국가별 무역 Treemap -----
+## 2.1. 대한민국
+# ct_country_lookup("Korea")
+korea <- trade_treemap_fn("Rep. of Korea")
+korea$export_tm
+```
+
+#### 2.2.2. 한국 수입 {#main-three-country-korea-import}
+
+``` {r trade-treemap-korea-import, fig.width=12}
+korea$import_tm
+```
+
+#### 2.2.3. 한국 무역수지 {#main-three-country-korea-balance}
+
+``` {r trade-treemap-korea-balance, fig.width=12}
+korea$trade_balance_tm
+```
+
+
+### 2.3. 중국 수출, 수입, 무역수지 {#main-three-country-china}
+
+#### 2.3.1. 중국 수입 {#main-three-country-china-import}
+
+``` {r trade-treemap-china-export, fig.width=12}
+## 2.2. 중국
+china <- trade_treemap_fn("China")
+china$export_tm
+```
+
+#### 2.3.2. 중국 수입 {#main-three-country-china-import}
+
+``` {r trade-treemap-china-import, fig.width=12}
+china$import_tm
+```
+
+#### 2.3.3. 중국 무역수지 {#main-three-country-china-balance}
+
+``` {r trade-treemap-china-balance, fig.width=12}
+china$trade_balance_tm
+```
+
+### 2.4. 미국 수출, 수입, 무역수지 {#main-three-country-usa}
+
+#### 2.3.1. 미국 수입 {#main-three-country-usa-import}
+
+``` {r trade-treemap-usa-export, fig.width=12}
+usa <- trade_treemap_fn("USA")
+usa$export_tm
+```
+
+#### 2.3.2. 미국 수입 {#main-three-country-usa-import}
+
+``` {r trade-treemap-usa-import, fig.width=12}
+usa$import_tm
+```
+
+#### 2.3.3. 미국 무역수지 {#main-three-country-usa-balance}
+
+``` {r trade-treemap-usa-balance, fig.width=12}
+usa$trade_balance_tm
+```
+
+
+
+
+
