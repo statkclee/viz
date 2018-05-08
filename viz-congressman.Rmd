@@ -76,7 +76,7 @@ np_comp_df %>%
 데이터프레임을 `trelliscope`을 활용하여 작은창(trellis)을 쭉 연결하여 인터랙티브하게 구현해 보자.
 
 ``` {r trelliscope-naver-viz, eval=TRUE}
-options(encoding = "utf8")
+# options(encoding = "utf8")
 
 np_comp_df %>%
   mutate(panel = img_panel(사진)) %>%
