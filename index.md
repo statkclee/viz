@@ -47,6 +47,7 @@ title: 데이터 과학 -- 시각화
         - [지역내총생산 (GRDP) - treemap](viz-grdp-treemap.html)
     - [지진해일 대피소 - crosstalk](viz-earthquake-shelter.html)
     - [무역보복 - UN Comtrade API](viz-trade-retaliation.html)
+    - [국회의원 사진 - trelliscope](viz-congressman.html)
 
 ### [xwMOOC 오픈 교재](https://statkclee.github.io/xwMOOC/)
 
