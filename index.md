@@ -25,6 +25,8 @@ title: 데이터 과학 -- 시각화
     - [행복한 시각화 생활을 위한 비밀](viz-secret.html)
     - [동영상 그래프(애니메이션) - 정당지지율](viz-animations.html)
     - [2018년 달력](viz-calendar.html)    
+- **애니메이션(Animation)**    
+    + [왜 아프리카인가?](viz-africa-animation.html) 
 - **시각화 실무**
     - [그래프 한장에 그래프 다수 찍기](viz-multiple-plots.html)
     - [그림을 파일에 저장](viz-save-plot.html) 

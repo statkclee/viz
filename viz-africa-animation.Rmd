@@ -1,0 +1,174 @@
+---
+layout: page
+title: xwMOOC 데이터 시각화
+subtitle: 왜 아프리카인가?
+date: "`r Sys.Date()`"
+author: xwMOOC
+output:
+  html_document: 
+    theme: journal
+    toc: yes
+    toc_depth: 2
+    toc_float: true
+    highlight: tango
+    number_section: true
+    code_folding: show
+    self_contained: true
+mainfont: NanumGothic
+---
+
+``` {r, include=FALSE}
+source("tools/chunk-options.R")
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+
+```
+
+# 설문조사로부터 받은 영감 {#survey-inspiration}
+
+Max Richman(2015)은 뉴욕 R 컨퍼런스에서 "R for Every Survey Analysis"라는 주제로 약 20분에 걸친 발표를 진행했다.
+본인 일도 소개하면서 "왜 아프리카인가?"라는 설명을 하면서 카토그램(Cartogram)으로 인구가 급격히 증가하는 아프리카대륙을 시각화하였다.
+이와 더불어 위험성에 대한 부분도 언급하면서 설문조사(survey)의 중요성과 함께 R로 데이터를 분석하는 방법을 소개하고 있다.
+
+<iframe width="300" height="180" src="https://www.youtube.com/embed/eYfEWNj0sKI" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+
+# 세계인구 변화 카토그램 {#world-population-cartogram}
+
+세계인구 변화에 대한 카토그램을 애니메이션으로 작성하기 위해서는 데이터와 지도가 필요하고 이를 조작해서 변환시킬 수 있는 프로그래밍언어가 필요하다.
+세계인구에 대한 연도별 공신력있는 데이터는 [세계은행 API](http://data.worldbank.org/developers/api-overview)에서 가져오는데 [`wbstats`](https://cran.r-project.org/web/packages/wbstats/)
+팩키지가 그 역할을 수행하는데 적합하고, 세계지도는 `geojson` 파일을 [GitHub, "johan/world.geo.json"](https://github.com/johan/world.geo.json)에서 직접 가져오는 방식도 있지만 
+[Natural World](https://www.naturalearthdata.com/) 지도 데이터셋을 [`rnaturalearth`](https://cran.r-project.org/web/packages/rnaturalearth/index.html) 팩키지를 통해 가져오는 것도 가능하다.
+
+<img src="fig/populatin-world-animation-overview.png" alt="세계인구 애니메이션" width="77%" />
+
+## 세계인구 데이터 {#world-population-cartogram-data}
+
+`wbsearch()` 함수를 통해 세계인구 데이터를 검색해서 `SP.POP.TOTL`이라는 것을 확인하고 
+`countrycode()` 팩키지를 통해 국가명만 발라낸다.
+
+``` {r wbstats-population-dataset}
+# 0. 환경설정 -----
+library(tidyverse)
+library(wbstats)
+library(countrycode)
+
+# 1. 세계 인구 데이터 가져오기 -----
+pop_vars <- wbsearch(pattern = "Population")
+
+# pop_vars %>% 
+#  filter(str_detect(indicator, '(?=total)')) %>% 
+#  filter(indicatorID == 'SP.POP.TOTL')
+
+world_pop_dat <- wb(indicator = "SP.POP.TOTL", startdate = 1950, enddate = 2017) 
+
+# 2. 국가별 인구만 추출 -----
+world_pop_df <- world_pop_dat %>% 
+  mutate(country_filter = countrycode(world_pop_dat$iso3c, 'iso3c', 'country.name')) %>% 
+  filter(!is.na(country_filter)) %>% 
+  as_tibble()
+
+world_pop_df %>%
+  sample_n(100) %>%  
+  DT::datatable()
+```
+
+## 세계지도 데이터 - 첫번째 방법 {#world-population-cartogram-map}
+
+`sf` 팩키지를 지도데이터를 다루는 핵심 팩키지로 상정하고 
+세계지도는 `geojson` 파일을 [GitHub, "johan/world.geo.json"](https://github.com/johan/world.geo.json) 사이트에서 받아온다.
+그리고, 사전에 파악한 국가코드 `iso3c`를 기준으로 인구데이터를 조합해서 2017년 인구데이터를 단계구분도(Choropleth map)로 시각화해서 테스트한다.
+
+``` {r wbstats-population-map}
+# 0. 환경설정 -----
+library(sf)
+
+# 1. 데이터 -----
+## 1.1. 세계 인구 데이터 가져오기 -----
+# world_pop_df
+
+# 1.2. 지도  -----
+# download.file(url="https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json", destfile = "data/world_map.geojson")
+
+world_sf <- st_read("data/world_map.geojson")
+
+# 1.3. 데이터 병합  -----
+world_df_sf <- inner_join(world_sf, world_pop_df, by=c("id" = "iso3c"))
+
+# 2. 단계구분도(Choropleth) 인구 -----
+
+world_df_sf %>% 
+  filter(date == 2017) %>% 
+  ggplot(aes(fill=value)) +
+    geom_sf() +
+    theme_void() +
+    scale_fill_gradient(low = "wheat1", high = "red", name = "인구수", labels = scales::comma)
+```
+
+## 세계지도 데이터 - 두번째 방법 {#world-population-cartogram-map2}
+
+두번째 방법은 첫번째와 유사하지만 `rnaturalearth` 팩키지 `ne_countries()` 함수를 통해 세계지도를 가져와서
+이를 `sp` 자료형에서 `sf` 자료형으로 변환시킨다. 그리고 나서 국가코드를 기준으로 매칭하고 이를 
+단계구분도로 1960년만 시각화한다.
+
+``` {r wbstats-population-map2}
+# 0. 환경설정 -----
+library(rnaturalearth)
+
+# 1. 세계지도 데이터 -----
+## 1.1. 세계 인구 데이터 가져오기 -----
+# world_pop_df
+
+# 1.2. 지도  -----
+world_map <- ne_countries(type = 'countries', scale = 'small')
+world_map_sf <- sf::st_as_sf(world_map)
+
+# 1.3. 데이터 병합  -----
+world_df_sf <- inner_join(world_map_sf, world_pop_df, by=c("iso_a3" = "iso3c"))
+
+# 2. 단계구분도(Choropleth) 인구 -----
+## 2.1. 정적 인구 그래프
+world_df_sf %>% 
+  filter(date == 1960) %>% 
+  ggplot(aes(fill=value)) +
+  geom_sf() +
+  theme_void() +
+  scale_fill_gradient(low = "wheat1", high = "red", name = "인구수", labels = scales::comma)
+```
+
+## 세계 인구 애니메이션  {#world-population-cartogram-map-ani}
+
+`gganimate` 팩키지를 바탕으로 `date` 연도를 바꿔 이를 애니메이션으로 변환시킨다.
+
+``` {r wbstats-population-map-ani}
+# 0. 환경설정 -----
+library(gganimate)
+
+world_pop_ani <- ggplot(world_df_sf, aes(fill=value)) +
+    geom_sf() +
+    theme_void() +
+    scale_fill_gradient(low = "wheat1", high = "red", name = "인구수", labels = scales::comma) +
+    transition_manual(date)
+
+animate(world_pop_ani, 100, 10)
+```
+
+## 세계인구 변량비례도(Cartogram) {#world-population-cartogram-map-cartogram}
+
+`cartogram` 팩키지 `cartogram_cont()` 함수로 변량비례도를 그린다. 
+현재, `cartogram_cont()` 함수를 실행시켜면 수렴하지 않는 문제가 있어 추후 해결하기로 한다.
+
+``` {r wbstats-population-map-cartogram, eval=FALSE}
+# 0. 환경설정 -----
+library(cartogram)
+
+# 3. 변량비례도(變量比例圖, Cartogram) 지도 -----
+world_pop_2016_cart <- world_df_sf %>% 
+  filter(date == 2016)
+
+world_pop_1960_cart <- cartogram_cont(world_pop_1960_cart, weight = 'value',  prepare = "remove")
+
+world_pop_1960_cart  %>% 
+  ggplot(aes(fill=value)) +
+  geom_sf() +
+  theme_void() +
+  scale_fill_gradient(low = "wheat1", high = "red", name = "인구수", labels = scales::comma)
+```
