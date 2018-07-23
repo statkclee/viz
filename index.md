@@ -32,8 +32,8 @@ title: 데이터 과학 -- 시각화
     - [남북한 군사력 비교 - 와플(Waffle)](viz-waffle-military.html)
     - [2018년 달력](viz-calendar.html)
 - **[범주형 데이터 시각화 기초](http://statkclee.github.io/data-science/ds-factor-dplyr-mosaic.html)**
-        - [범주형 자료 - 모자이크(mosaic): 통계청 출산(2016)](viz-mosaic-plot.html)
-        - [발전 에너지(원자력 포함) - 대응분석(Correspondance Analysis)](viz-mosaic-ca.html)
+    - [범주형 자료 - 모자이크(mosaic): 통계청 출산(2016)](viz-mosaic-plot.html)
+    - [발전 에너지(원자력 포함) - 대응분석(Correspondance Analysis)](viz-mosaic-ca.html)
 - **애니메이션(Animation)**    
     - [동영상 그래프(애니메이션) - 정당지지율](viz-animations.html)
     - [왜 아프리카인가?](viz-africa-animation.html) 

@@ -1,13 +1,32 @@
-# 데이터 과학
+---
+layout: page
+title: 데이터 과학
+subtitle: 기념비적인 시각화 역작모음
+output:
+  html_document: 
+    toc: yes
+    toc_float: true
+    highlight: tango
+    number_section: true
+    code_folding: show
+mainfont: NanumGothic
+---
 
 
 
-> ## 학습 목표  {.objectives}
->
-> * 역사에 기리 남을 기념비적인 시각화 역작을 살펴본다.
+
+역사에 길이 남을 기념비적인 시각화 역작을 살펴보자. [^data-visualization-of-all-time]
+
+[^data-visualization-of-all-time]: [Tableau Software(2012), The 5 most influential data visualizations of all time](https://www.slideshare.net/TableauSoftware/the-5-most-influential-data-visualizations-of-all-time)
+
+1. Chart of Biography – Joseph Priestley 
+1. War Mortality – Florence Nightingale
+1. March on Moscow – Charles Minard
+1. Gapminder – Rosling
+1. London Cholera Map – John Snow
 
 
-## 1. 나폴레옹 러시아 침공
+# 나폴레옹 러시아 침공 {#march-on-moscow}
 
 [나폴레옹 러시아 침공](https://en.wikipedia.org/wiki/French_invasion_of_Russia)을 [Charles Joseph Minard](https://en.wikipedia.org/wiki/Charles_Joseph_Minard)가
 시각화한 산출물이 첫손에 꼽는 시각화 역작이다.
@@ -47,14 +66,27 @@ plot_polished <- ggplot(troops, aes(long, lat)) +
 plot_polished
 ~~~
 
-<img src="fig/viz-minard-data-map-ggplot-1.png" style="display: block; margin: auto;" />
+<img src="fig/viz-minard-data-map-ggplot-1.png" title="plot of chunk viz-minard-data-map-ggplot" alt="plot of chunk viz-minard-data-map-ggplot" style="display: block; margin: auto;" />
+
+# 존 스노우 콜레라 {#snow-cholera-map}
+
+<img src="fig/john-snow-cholera-outbreak-map.png" alt="John Snow 콜레라 발병 지도" width="100%" />
+
+# 갭 마인더(Gapminder–Rosling) {#gapminder-rosling}
+
+<img src="fig/gapminder_rosling.jpg" alt="갭 마인더 - 로슬링" width="100%" />
 
 
-## 2. 존 스노우 콜레라
+# 나이팅게일 사망자수(War Mortality) {#nightingale-war-mortality}
 
+<img src="fig/Nightingale-mortality.jpg" alt="나이팅게일 전쟁 사망자수" width="100%" />
 
-## 3. 나이팅게일
+# 전기 도표(Chart of Biography) {#chart-biography}
 
-## 4. 마이애미 헤럴드 허리케인 피해 GIS 지도
+<img src="fig/Chart_of_Biography.jpg" alt="전기도표" width="100%" />
 
-https://richybedford.wordpress.com/2014/01/10/why-journalists-sould-use-geographic-information-systems-gis-the-views-of-leading-data-journalism-experts/
+# 마이애미 헤럴드 허리케인 피해 GIS 지도 [^miami-hurricane-map] {#hurricane-map}
+
+<img src="fig/miami-hurricane.jpg" alt="마이애미 허리케인" width="100%" />
+
+[^miami-hurricane-map]: [RICHARD BEDFORD, Why a journalist should use GIS – Views from the leading experts](https://richybedford.wordpress.com/2014/01/10/why-journalists-sould-use-geographic-information-systems-gis-the-views-of-leading-data-journalism-experts/)
