@@ -1,8 +1,20 @@
-# 데이터 과학
+---
+layout: page
+title: 데이터 과학
+subtitle: 행복한 시각화 생활을 위한 비밀
+output:
+  html_document: 
+    toc: yes
+    toc_float: true
+    highlight: tango
+    number_section: true
+    code_folding: show
+mainfont: NanumGothic
+---
 
 
 
-### 데이터 랭글링 숨은 문제 [^viz-secret] 
+# 데이터 랭글링 숨은 문제 [^viz-secret]  {#viz-secret-wranglilng}
 
 [^viz-secret]: [Secrets of a happy graphing life](https://stat545-ubc.github.io/block016_secrets-happy-graphing.html)
 
@@ -16,7 +28,7 @@
 저자 경험으로는 그래프 생성에 대한 상당한 고통이 충분하지 못한 데이터 랭글링에 기인한다.
 잠재된 데이터 저장과 데이터 조작문제를 다루면 그래프 관련 문제는 흔히 사라져 버린다.
 
-### 데이터프레임에 작업하는 것을 담는다.
+## 데이터프레임에 작업할 것을 담음. {#viz-secret-dataframe}
 
 상당히 많은 학생들 코드를 살펴보면 변수가 데이터프레임 밖에 복사되고 작업공간에 독립된 객체로 존재하는 것을 볼 수 있다.
 
@@ -33,13 +45,15 @@ year <- gapminder$year
 
 ~~~{.r}
 library(ggplot2)
-ggplot(aes(x = year, y = life_exp)) + geom_jitter()
+ggplot(aes(x = year, y = life_exp)) + 
+  geom_jitter()
 ~~~
 
 
 
 ~~~{.output}
-Error: ggplot2 doesn't know how to deal with data of class uneval
+Error: `data` must be a data frame, or other object coercible by `fortify()`, not an S3 object with class uneval
+Did you accidentally pass `aes()` to the `data` argument?
 
 ~~~
 
@@ -52,8 +66,7 @@ Error: ggplot2 doesn't know how to deal with data of class uneval
 ggplot(data = gapminder, aes(x = year, y = life_exp)) + geom_jitter()
 ~~~
 
-<img src="fig/data-in-situ-1.png" style="display: block; margin: auto;" />
-
+<img src="fig/data-in-situ-1.png" title="plot of chunk data-in-situ" alt="plot of chunk data-in-situ" style="display: block; margin: auto;" />
 
 국가별, 대륙별, 년도별 데이터를 필터링하면 어떨까?
 영향을 받은 모든 변수가 데이터프레임에 있게되면 훨씬 더 쉽고 안전하게 작업을 수행할 수 있다.
@@ -65,7 +78,7 @@ ggplot(data = gapminder, aes(x = year, y = life_exp)) + geom_jitter()
 예를 들어, `lm()`, `aggregate()`, `plot()`, `t.test()`. 
 따라서, 이런 방식이 기본디폴트 작업방식이 된다.
 
-### `dplyr::data_frame()` 방식으로 데이터프레임을 명시적으로 생성한다.
+## `dplyr::data_frame()` 방식으로 데이터프레임을 명시적 생성 {#viz-secret-explicit-dataframe}
 
 데이터가 이미 있는데 데이터프레임이 아니라면, "왜 데이터프레임이 아닌가?" 라고 본인에게 질문을 해본다.
 변수는 생성했는가? 아마도 먼저 데이터프레임으로 생성했어야만 했다.
@@ -76,36 +89,39 @@ ggplot(data = gapminder, aes(x = year, y = life_exp)) + geom_jitter()
 
 
 ~~~{.r}
-suppressPackageStartupMessages(library(dplyr))
-my_dat <-
-  data_frame(x = 1:5,
+library(tidyverse)
+my_dat <- data_frame(x = 1:5,
              y = x ^ 2,
              text = c("alpha", "beta", "gamma", "delta", "epsilon"))
-str(my_dat)
+
+glimpse(my_dat)
 ~~~
 
 
 
 ~~~{.output}
-Classes 'tbl_df', 'tbl' and 'data.frame':	5 obs. of  3 variables:
- $ x   : int  1 2 3 4 5
- $ y   : num  1 4 9 16 25
- $ text: chr  "alpha" "beta" "gamma" "delta" ...
+Observations: 5
+Variables: 3
+$ x    <int> 1, 2, 3, 4, 5
+$ y    <dbl> 1, 4, 9, 16, 25
+$ text <chr> "alpha", "beta", "gamma", "delta", "epsilon"
 
 ~~~
 
 
 
 ~~~{.r}
-ggplot(my_dat, aes(x, y)) + geom_line() + geom_text(aes(label = text))
+ggplot(my_dat, aes(x, y)) + 
+  geom_line() + 
+  geom_text(aes(label = text))
 ~~~
 
-<img src="fig/data_frame-love-1.png" style="display: block; margin: auto;" />
+<img src="fig/data_frame-love-1.png" title="plot of chunk data_frame-love" alt="plot of chunk data_frame-love" style="display: block; margin: auto;" />
 
 데이터프레임에 변수를 새로 추가하는 `dplyr::mutate()` 함수를 통해, 동일한 길이를 갖는
 연관된 변수를 처리할 때마다 데이터프레임 내부에서 동작하는 도구를 갖추게 된다.
 
-### 관련된 것 -- `with()`
+## 관련된 것 -- `with()` {#viz-secret-with}
 
 슬프게도 모든 함수가 `data=` 인자를 제공하지는 않는다.
 상관계수를 계산하는 `cor()` 함수를 예로 들어보자. 다음 코드는 동작하지 않는다:
@@ -118,7 +134,7 @@ cor(year, lifeExp, data = gapminder)
 
 
 ~~~{.output}
-Error in cor(year, lifeExp, data = gapminder): unused argument (data = gapminder)
+Error in cor(year, lifeExp, data = gapminder): 사용되지 않은 인자 (data = gapminder)
 
 ~~~
 
@@ -176,15 +192,15 @@ gapminder %$%
 
 ~~~
 
-### 데이터 깔끔히 만들기
+## 데이터 깔끔히 만들기 {#viz-secret-tidy}
 
-[데이터 깔끔화(tidyr)](data-handling-tidyr.html)를 참조한다.
+[데이터 깔끔화(tidyr)](https://statkclee.github.io/data-science/data-handling-tidyr.html)를 참조한다.
 
-### 요인 관리
+## 요인(factor) 다루기 {#viz-secret-factor}
 
+[xwMOOC 데이터과학, 요인(Factor) - 범주형 자료형](https://statkclee.github.io/data-science/ds-factor-cdata.html)를 참조한다.
 
-
-### 사례
+# 사례 {#viz-secret-case-study}
 
 특정한 국가 예를 들어 한국을 뽑아 연도별로 모든 정량적 변수를 도식화한다.
 
@@ -193,7 +209,7 @@ gapminder %$%
 사실 이 방식으로 작업을 수행할 수 있다.
 하지만, 데이터 형태를 바꾸는 방식이 루프를 돌리는 것보다 현재 R 생태계를 고려하면 좀더 "R스럽다".
 
-#### 데이터 형태 바꾸기
+## 데이터 형태 바꾸기 {#viz-secret-case-study-data}
 
 `gapminder` 데이터에서 한국만 뽑아낸다.
 그리고 나서 `pop`, `lifeExp`, `gdpPercap` 변수를 `var` 동반변수를 키로 
@@ -201,7 +217,6 @@ gapminder %$%
 
 
 ~~~{.r}
-suppressPackageStartupMessages(library(tidyr))
 korea_dat <- gapminder %>%
   filter(country == "Korea, Rep.")
 korea_tidy <- korea_dat %>%
@@ -234,10 +249,10 @@ dim(korea_tidy)
 즉, 폭이 넓은 데이터를 길이가 긴 데이터로 바꿔서 36 행을 갖는다.
 
 
-#### 패싯 기능으로 변수를 반복
+## `facet` 기능으로 변수를 반복 {#viz-secret-case-study-facet}
 
 데이터가 깔끔한 데이터프레임에 반복을 돌릴 수 있는 변수를 나타내는 적절한 요인으로 구성되어서,
-패싯 기능을 구현하기만 하면 된다.
+`facet` 기능을 구현하기만 하면 된다.
 
 
 ~~~{.r}
@@ -247,26 +262,28 @@ p + geom_point() + geom_line() +
   scale_x_continuous(breaks = seq(1950, 2011, 15))
 ~~~
 
-<img src="fig/korea-1.png" style="display: block; margin: auto;" />
+<img src="fig/korea-facet-1.png" title="plot of chunk korea-facet" alt="plot of chunk korea-facet" style="display: block; margin: auto;" />
 
-#### 요약
+# 요약 {#viz-secret-summary}
 
 한국을 뽑아 시각화한 코드가 다음에 요약되어 있다.
 
 
 ~~~{.r}
-korea_tidy <- gapminder %>%
+gapminder %>%
   filter(country == "Korea, Rep.") %>%
-  gather(key = var, value = value, pop, lifeExp, gdpPercap)
-ggplot(korea_tidy, aes(x = year, y = value)) +
-  facet_wrap(~ var, scales="free_y") +
-  geom_point() + geom_line() +
-  scale_x_continuous(breaks = seq(1950, 2011, 15))
+  gather(key = var, value = value, pop, lifeExp, gdpPercap) %>%
+  ggplot(aes(x = year, y = value)) +
+    facet_wrap(~ var, scales="free_y") +
+    geom_point() + geom_line() +
+    scale_x_continuous(breaks = seq(1950, 2011, 15))
 ~~~
 
-앞에서 언급한 규칙에서 나온 이득을 상기 토마코드가 보여주고 있다.
+<img src="fig/viz-secret-summary-1.png" title="plot of chunk viz-secret-summary" alt="plot of chunk viz-secret-summary" style="display: block; margin: auto;" />
+
+앞에서 언급한 규칙에서 나온 이득을 상기 토막 코드가 보여주고 있다.
 
 - 한국만 **데이터프레임**에서 격리시킨다.
 - 데이터 형태를 **reshape**해서 바꾼다. 이것이 전형적인 **깔끔화** 사례다.
-  칼럼 세개를 칼럼 한개로 모으는데 이유는 그림에 y-축에 각 변수를 도식화하는데 좋다.
+    - 칼럼 세개를 칼럼 한개로 모으는데 이유는 그림에 y-축에 각 변수를 도식화하는데 좋다.
 - 각 작은 그림에 속한 관측점을 구별하는데 **요인**을 사용하고 나서, 패싯 기능을 응용했다. 

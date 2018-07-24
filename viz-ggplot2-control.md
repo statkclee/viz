@@ -1,11 +1,22 @@
-# 데이터 과학
+---
+layout: page
+title: 데이터 과학
+subtitle: ggplot2 색상 제어
+output:
+  html_document: 
+    toc: yes
+    toc_float: true
+    highlight: tango
+    number_section: true
+    code_folding: show
+mainfont: NanumGothic
+---
 
 
 
-### `gapminder` 데이터 준비[^viz-ggplot2-control] 
+# `gapminder` 데이터 준비 [^viz-ggplot2-control] {#gapminder-dataset}
 
 [^viz-ggplot2-control]: [Taking control of qualitative colors in ggplot2](https://stat545-ubc.github.io/block019_enforce-color-scheme.html)
-
 
 국가가 2개만 포함된 오세아니아를 제외한 `gapminder` 데이터를 불러온다.
 
@@ -19,9 +30,9 @@
 
 
 ~~~{.r}
-library(ggplot2)
+library(tidyverse)
 library(gapminder)
-suppressPackageStartupMessages(library(dplyr))
+
 jdat <- gapminder %>% 
   filter(continent != "Oceania") %>% 
   droplevels() %>% 
@@ -29,7 +40,7 @@ jdat <- gapminder %>%
   arrange(year, country)  
 ~~~
 
-### 점에 대한 크기와 색상 제어
+# 점에 대한 크기와 색상 제어 {#gapminder-point-size}
 
 `ggplot2`를 사용해서 전통적 `gapminder` 거품그림을 생성해 나간다.
 기어가고 나서, 걷고, 마지막으로 뛴다.
@@ -47,7 +58,7 @@ q <-
 q + geom_point()
 ~~~
 
-<img src="fig/scatterplot-1.png" style="display: block; margin: auto;" />
+<img src="fig/gapminder-scatterplot-1.png" title="plot of chunk gapminder-scatterplot" alt="plot of chunk gapminder-scatterplot" style="display: block; margin: auto;" />
 
 제도되는 기호, 크기, 색상을 제어한다.
 다소 불쾌한 설정을 사용해서, 성공과 실패를 확실히 명확히 한다.
@@ -60,9 +71,9 @@ q + geom_point()
 q + geom_point(pch = 21, size = 8, fill = I("darkorchid1"))
 ~~~
 
-<img src="fig/scatterplot-obnoxious-points-1.png" style="display: block; margin: auto;" />
+<img src="fig/scatterplot-obnoxious-points-1.png" title="plot of chunk scatterplot-obnoxious-points" alt="plot of chunk scatterplot-obnoxious-points" style="display: block; margin: auto;" />
 
-### 원크기 = 인구수
+# 원크기 = 인구수 {#gapminder-circle-size}
 
 원크기로 인구수를 반영하고자 한다. 
 반지름을 바로 제어할 수 있기 때문에, 국가별 인구에서 원의 크기를 결정하도록 관계를 $면적 = \pi r^2$으로 설정한다.
@@ -79,9 +90,9 @@ q + geom_point(aes(size = pop), pch = 21)
    scale_size_continuous(range=c(1,40)))
 ~~~
 
-<img src="fig/scatterplot-population-area-1.png" width="50%" style="display: block; margin: auto;" /><img src="fig/scatterplot-population-area-2.png" width="50%" style="display: block; margin: auto;" />
+<img src="fig/scatterplot-population-area-1.png" title="plot of chunk scatterplot-population-area" alt="plot of chunk scatterplot-population-area" width="50%" style="display: block; margin: auto;" /><img src="fig/scatterplot-population-area-2.png" title="plot of chunk scatterplot-population-area" alt="plot of chunk scatterplot-population-area" width="50%" style="display: block; margin: auto;" />
 
-### 요인으로 결정된 색상으로 원을 채워넣는다.
+# 요인 색상으로 원을 채워넣기 {#gapminder-circle-color}
 
 `aes()` 함수를 사용해서 요인을 색상으로 매핑한다.
 우선, `continent` 요인과 자동 색상조합에 맞춰 사용한다.
@@ -95,9 +106,9 @@ q + geom_point(aes(size = pop), pch = 21)
 r + aes(fill = continent)
 ~~~
 
-<img src="fig/scatterplot-continent-fill-1.png" width="50%" style="display: block; margin: auto;" /><img src="fig/scatterplot-continent-fill-2.png" width="50%" style="display: block; margin: auto;" />
+<img src="fig/scatterplot-continent-fill-1.png" title="plot of chunk scatterplot-continent-fill" alt="plot of chunk scatterplot-continent-fill" width="50%" style="display: block; margin: auto;" /><img src="fig/scatterplot-continent-fill-2.png" title="plot of chunk scatterplot-continent-fill" alt="plot of chunk scatterplot-continent-fill" width="50%" style="display: block; margin: auto;" />
 
-### 국가별 생상조합을 설정한다.
+# 국가별 생상조합을 설정한다. {#gapminder-country-color}
 
 `gapminder` 팩키지에는 대륙과 각 국가별 색상 팔레트가 따라온다.
 예를 들어, [국가별 색상조합](https://github.com/jennybc/gapminder/blob/master/data-raw/gapminder-color-scheme-ggplot2.png)을 
@@ -136,7 +147,7 @@ head(country_colors)
 국가가 실제로 대륙내 크기로 정렬되어 있어, 색상조합이 생성된 로직을 반영하고 있다.
 이상적으로, 실제에서는 항상 그렇지는 않지만, 분석이 행순서에 의존하면 안된다.
 
-### `ggplot2`에 사용될 색상조합을 준비한다.
+# `ggplot2`에 사용될 색상조합 준비 {#gapminder-ggplot-color-palette}
 
 그래픽 문법(Grammar of Graphics)에서, **scale** 함수가 데이터 변수에서 `aes` 미학에 대한 매핑을 제어한다.
 지금까지, 자동으로 `ggplot2`가 색상 / 채우기 scale 이 결정되도록 내버려 두었다.
@@ -149,7 +160,7 @@ head(country_colors)
 이를 통해 `country` 요인 수준에 대한 순서, 데이터 행 순서, 혹은 정확하게 어떤 국가가 제도되어야 하는지에 
 관한 걱정을 덜어준다.
 
-### `ggplot2` 거품그림을 생성한다.
+# `ggplot2` 거품그림을 생성한다. {#gapminder-draw-circle}
 
 이 지점에 오면 사기성이 있을 정도로 단순해 진다.
 다른 많은 것과 마찬가지로, 앞선 모든 것을 해결하면, 정말 쉽다. 
@@ -161,9 +172,9 @@ head(country_colors)
 r + aes(fill = country) + scale_fill_manual(values = country_colors)
 ~~~
 
-<img src="fig/scatterplot-country-fill-1.png" style="display: block; margin: auto;" />
+<img src="fig/scatterplot-country-fill-1.png" title="plot of chunk scatterplot-country-fill" alt="plot of chunk scatterplot-country-fill" style="display: block; margin: auto;" />
 
-### 한곳에 모두 모아보자.
+# 한곳에 모두 모아보자. {#gapminder-final-code}
 
 제도를 완성하는 전체 코드는 다음과 같다.
 
@@ -180,4 +191,4 @@ jdat %>%
   scale_size_continuous(range = c(1,40)) + ylim(c(39, 87))
 ~~~
 
-<img src="fig/scatterplot-country-fill-final-1.png" style="display: block; margin: auto;" />
+<img src="fig/scatterplot-country-fill-final-1.png" title="plot of chunk scatterplot-country-fill-final" alt="plot of chunk scatterplot-country-fill-final" style="display: block; margin: auto;" />
