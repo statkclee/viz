@@ -37,7 +37,7 @@ title: 데이터 과학 -- 시각화
 - **애니메이션(Animation)**    
     - [동영상 그래프(애니메이션) - 정당지지율](viz-animations.html)
     - [왜 아프리카인가?](viz-africa-animation.html) 
-- **인터랙티브(Interactive)**
+- **[인터랙티브(Interactive) 시각화](viz-interactive.html)**
     - [지진해일 대피소 - crosstalk](viz-earthquake-shelter.html)
     - [ggvis = 웹브라우져 기능(Vega/D3) + ggplot](viz-ggvis.html)
     - [북한 미사일 발사 연대기](viz-nk-missile.html)
