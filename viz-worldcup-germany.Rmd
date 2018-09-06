@@ -57,7 +57,7 @@ player_df <- read_rds("data/player_df.rds")
   </div>
 </div>
 
-# 독일전 축구 데이터 [^data-science-viz-01] [^data-science-viz-02] [^tokyo-r-meetup] {#russia-2018-worldcup-germany}
+# 정적 시각화 [^data-science-viz-01] [^data-science-viz-02] [^tokyo-r-meetup] {#russia-2018-worldcup-germany}
 
 [^tokyo-r-meetup]: [Soccer ggplot - Tokyo R Meetup](https://github.com/Ryo-N7/soccer_ggplots)
 
@@ -225,4 +225,110 @@ ggplot(second_ball_df) +
 ```
 
 
+# 동적 시각화 {#russia-2018-worldcup-germany-ani}
+
+선수의 위치와 골의 이동경로를 설정하고 `time` 순서를 지정한다. 그리고 나서,
+`gganimate` 팩키지 `transition_states()` 함수를 사용해서 득점장면 애니메이션을 생성시킨다.
+
+## 김영권 첫번째 골 {#russia-2018-worldcup-germany-player-first}
+
+독일전 첫번째 골의 경우 손흥민 코너킥으로 선수의 움직임이 크지 않은 상태에서 공이 손흥민 &rarr; 이승우 &rarr; 윤영선 &rarr; 김영권으로 연결되며 골로 연결된 경우다. 따라서 골의 움직임만 `time`을 주어 이동시키면 애니메이션을 간단히 제작할 수 있다.
+
+```{r first-goal-animation}
+# 1. 첫번째 골 데이터 ------
+
+first_ball_df <- tribble(~x,      ~y,  ~time,
+                         0,      100,   1,
+                         6.78, 67.94,   2,
+                         7.5,  56.84,   3,
+                         4.64, 38.94,   4,
+                         -0.8,	47,   5)
+
+first_player_df <- tribble(~x, ~y, ~name, 
+                           0,    100,   "손흥민",
+                           9.78, 67.94, "이승우",
+                           9.5,  56.84, "윤영선",
+                           7.64, 38.94, "김영권")
+
+ggplot(first_ball_df) +
+    annotate_pitch() +
+    theme_pitch() +
+    coord_flip() +
+    xlim(-10, 51) +
+    ylim(-15, 101) +
+    labs(title="한국과 독일 월드컵 예선", 
+         subtitle="김영권 첫번째골(90+2)") +
+    theme(legend.position = "none") +
+    geom_label(data = first_player_df, aes(x = x, y = y, label = name)) +
+    theme(text = element_text(family = "NanumBarunGothic")) +
+    ggimage::geom_emoji(
+        aes(x = x, 
+            y = y),
+        image = "26bd", size = 0.035) +
+    transition_states(
+        time,
+        transition_length = 0.5,
+        state_length = 0.0001,
+        wrap = FALSE) +
+    ease_aes("linear")
+   # transition_manual(frames = time)
+```
+
+
+## 손흥민 두번째 골 {#russia-2018-worldcup-germany-player-second}
+
+두번째 손흥민의 골은 주세종이 독일 골키퍼로부터 공을 가로채서 이를 손흥민에 연결하고 손흥민이 빠른 주력을 이용하여 골대까지 전력질주하여 골을 넣은 경우라, 공뿐만 아니라 선수의 움직임도 함께 애니메이션화하여 시각화한다.
+
+```{r second-goal-animation}
+# 2. 두번째 골 데이터 ------
+
+second_ball_df <- tribble(~x, ~y, ~time,
+                          69.28, 15.52, 1,
+                          75.89, 22.89, 2,
+                          24.28, 62.89, 3,
+                          24.28, 62.89, 4,
+                          2.85, 60.52,  5,
+                          -1.07, 46.31, 6)
+
+sohn_movement_df <- tribble(~x, ~y, ~time, ~name,
+                            35.28, 62.89, 1, "손흥민",
+                            35.28, 62.89, 2, "손흥민",
+                            35.28, 62.89, 3, "손흥민",
+                            24.28, 62.89, 4, "손흥민",
+                             2.85, 60.52, 5, "손흥민",
+                             2.85, 60.52, 6, "손흥민")
+
+joo_movement_df <- tribble(~x, ~y, ~time, ~name,
+                           69.28, 15.52, 1, "주세종",
+                           75.89, 22.89, 2, "주세종",
+                           75.89, 22.89, 3, "주세종",
+                           75.89, 22.89, 4, "주세종",
+                           75.89, 22.89, 5, "주세종",
+                           75.89, 22.89, 6, "주세종")
+
+ggplot(second_ball_df) +
+    annotate_pitch() +
+    theme_pitch() +
+    coord_flip() +
+    xlim(-10, 101) +
+    ylim(-15, 101) +
+    labs(title="한국과 독일 월드컵 예선", 
+         subtitle="손흥민 두번째골(90+6)") +
+    theme(legend.position = "none") +
+    geom_label(data = joo_movement_df, aes(x = x, y = y, label = name)) +
+    geom_label(data = sohn_movement_df, aes(x = x, y = y, label = name)) +
+    theme(text = element_text(family = "NanumBarunGothic")) +
+    ggimage::geom_emoji(
+        aes(x = x, 
+            y = y),
+        image = "26bd", size = 0.035) +
+    transition_states(
+        time,
+        transition_length = 0.5,
+        state_length = 0.0001,
+        wrap = FALSE) +
+    # transition_manual(frames = time)
+    ease_aes("quadratic-out")
+
+```
 
