@@ -47,7 +47,8 @@ title: 데이터 과학 -- 시각화
     - [국회의원 사진 - trelliscope](viz-congressman.html)
     - [저출산과 소요예산 - 상관관계](viz-low-birth-rate.html)
 - **시각화 실무**
-    - [가구당 가계수지 - 10 분위별](viz-household-balance-deciles.html)            
+    - [가구당 가계수지 - 10 분위별](viz-household-balance-deciles.html)
+    - [러시아 월드컵(2018) - 한국 vs 독일](viz-worldcup-germany.html)
     - **treemap**
         - [대한민국 인구변화(2000 vs 2015) - treemap](viz-pop-treemap.html)
         - [지역내총생산 (GRDP) - treemap](viz-grdp-treemap.html)    

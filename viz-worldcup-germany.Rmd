@@ -1,0 +1,228 @@
+---
+layout: page
+title: 데이터 과학
+subtitle: 러시아 월드컵(2018) - 한국 vs 독일
+output:
+  html_document: 
+    toc: yes
+    toc_float: true
+    highlight: tango
+    number_section: true
+    code_folding: show
+mainfont: NanumGothic
+---
+
+```{r  include = FALSE}
+source("tools/chunk-options.R")
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE,
+                    comment="", digits = 3, tidy = FALSE, prompt = TRUE, fig.align = 'center')
+
+
+library(tidyverse)
+library(rvest)
+library(extrafont)
+loadfonts()
+# devtools::install_github("torvaney/ggsoccer")
+library(ggsoccer)  # create soccer pitch overlay
+library(tweenr)    # build frames for animation
+library(gganimate) # animate plots
+library(extrafont) # insert custom fonts into plots
+library(ggimage)   # insert images and emoji into plots
+
+player_df <- read_rds("data/player_df.rds")
+
+````
+
+
+
+# 러시아 월드컵 예선 독일전 [^russia-goal-sbs] {#russia-2018-worldcup}
+
+[^russia-goal-sbs]: [SBS (2018-06-28) "대한민국 VS 독일 후반 하이라이트…김영권-손흥민 골"](http://programs.sbs.co.kr/sports/fifawc/article/54896/S10009123103)
+
+러시아 월드컵 예선 마지막 독일과의 경기는 2패로 16강 탈락이 확정되었지만, 독일을 2-0으로 물리치는 감동적인 경기였다. Tokyo R에서 **Ryo Nakagawara** 발표했던 것에 영감을 받아 독일과 월드컵 최종예선 데이터를 시각화하여 기록해서 남겨두고자 한다.
+
+<div class = "row">
+  <div class = "col-md-6">
+**김영권(90+2)**
+
+<img src="fig/first_goal.gif" alt="첫번째 꼴" width="100%" />
+
+  </div>
+  <div class = "col-md-6">
+**손흥민(90+6)**
+
+<img src="fig/second_goal.gif" alt="첫번째 꼴" width="100%" />
+
+  </div>
+</div>
+
+# 독일전 축구 데이터 [^data-science-viz-01] [^data-science-viz-02] [^tokyo-r-meetup] {#russia-2018-worldcup-germany}
+
+[^tokyo-r-meetup]: [Soccer ggplot - Tokyo R Meetup](https://github.com/Ryo-N7/soccer_ggplots)
+
+[^data-science-viz-01]: [Ryo Nakagawara, "Visualize the World Cup with R! Part 1: Recreating Goals with ggsoccer and ggplot2"](https://datascienceplus.com/visualize-the-world-cup-with-r-part-1-recreating-goals-with-ggsoccer-and-ggplot2/)
+
+[^data-science-viz-02]: [Ryo Nakagawara, "Animating the Goals of the World Cup: Comparing the old vs. new gganimate and tweenr API"](https://datascienceplus.com/animating-the-goals-of-the-world-cup-comparing-the-old-vs-new-gganimate-and-tweenr-api/)
+
+## 월드컵 참가선수 명단 {#russia-2018-worldcup-germany-player}
+
+러시아 월드컵에 참가한 선수명단은 [위키 - 2018년_FIFA_월드컵_선수_명단](https://ko.wikipedia.org/wiki/2018년_FIFA_월드컵_선수_명단) 웹페이지에서 확인이 가능하다. 이를 위해서 먼저 `rvest` 팩키지를 활용하여 정적 웹페이지를 긁어와서 데이터 정제작업을 거처 월드컵 참가 선수 명단을 확정한다.
+
+``` {r worldcup-germany-player, eval=FALSE}
+
+# 0. 환경설정 ------
+# library(tidyverse)
+# library(rvest)
+# library(extrafont)
+# loadfonts()
+# # devtools::install_github("torvaney/ggsoccer")
+# library(ggsoccer)  # create soccer pitch overlay
+# library(tweenr)    # build frames for animation
+# library(gganimate) # animate plots
+# library(extrafont) # insert custom fonts into plots
+# library(ggimage)   # insert images and emoji into plots
+
+# 1. 데이터 ------
+## 1.1. 월드컵 출전 선수 데이터 -----
+Sys.setlocale("LC_ALL", "C")
+world_url <- "https://ko.wikipedia.org/wiki/2018년_FIFA_월드컵_선수_명단"
+
+player_dat <- world_url %>% 
+    read_html() %>%
+    html_nodes(xpath='//*[@id="mw-content-text"]/div/table[24]/tbody/tr/td/table') %>% 
+    html_table(fill=TRUE) %>% 
+    .[[1]]
+ 
+Sys.setlocale("LC_ALL", "Korean")
+
+player_df <- player_dat %>% 
+    mutate(주장 = ifelse(str_detect(`선수 이름`, "\\("), "주장", "선수")) %>% 
+    mutate(`선수 이름` = str_sub(`선수 이름`, 1, 3))
+
+```
+
+```{r worldcup-germany-player-dt}
+DT::datatable(player_df)
+```
+
+
+
+## 출전선수 명단 {#russia-2018-worldcup-germany-player}
+
+독일전은 2018-08-27 예선전이 열렸으며 골키퍼 조현우를 비롯한 선발선수명단이 각 포지션별로 발표되었다.
+
+- 골키퍼: 조현우
+- 수비: 이용 윤영선 김영권 홍철
+- 미드필드: 이재성 정우영 장현수 문선민
+- 공격: 구자철 손흥민
+
+[Soccer event logger](https://torvaney.github.io/projects/tracker#)를 활용하여 각 선수별 위치를 축구경기장에 클릭하여 좌표를 얻은 후에 선수명을 수작업을 붙여 놓고 이를 `ggsoccer` 팩키지 `annotate_pitch()`, `theme_pitch()` 함수를 사용해서 시각화한다. 
+
+```{r worldcup-germany-lineup}
+# 2. 선발 라인업 ------
+
+lineup_df <- tribble(
+    ~x, ~y, ~name,
+9.035, 50.00, "조현우",
+24.46, 90.78, "이용",
+19.10, 66.05, "운영선",
+19.10, 30.52, "김영권",
+25.17,  5.52, "홍철",
+46.60, 91.57, "이재성",
+45.89, 66.05, "정우영",
+45.53, 30.42, "장현수",
+43.39,  5.52, "문선민",
+71.60, 30.26, "구자철",
+72.67, 64.73, "손흥민")
+
+ggplot(lineup_df) +
+    annotate_pitch() +
+    theme_pitch(aspect_ratio = NULL) +
+    coord_flip() +
+    geom_point(
+        aes(x = x, y = y), size = 1.5) +
+    geom_text(
+        aes(x = x, y = y, label = name, family=c("NanumGothic")),
+        vjust = 1.5, color = "blue")
+```
+
+
+## 독일전 골모음 {#russia-2018-worldcup-germany-goal}
+
+정규 경기시간이 모두 소진된 후에 추가시간이 6분 주워졌고, 추가시간 2분 손흥민의 코너킥이
+김영권에 이어지면서 독일전 첫골이 완성되었다.
+
+```{r germany-first-goal}
+# 1. 첫번째 골 데이터 ------
+
+ball_df <- tribble(~from_x, ~from_y, ~to_x, ~to_y, 
+                      0,    100,   6.78, 63.94,
+                      6.78, 63.94, 7.5,  56.84,
+                      7.5,  56.84, 4.64, 38.94,
+                      4.64, 38.94, -0.53,47.36)
+
+first_player_df <- tribble(~x, ~y, ~name, 
+                   0,    100,   "손흥민",
+                   6.78, 63.94, "이승우",
+                   7.5,  56.84, "윤영선",
+                   4.64, 38.94, "김영권")
+
+ggplot(ball_df) +
+    annotate_pitch() +
+    geom_point(aes(x=from_x, y=from_y, size=1.5, color="red")) +
+    geom_point(aes(x=to_x, y=to_y, size=1.5, color="red")) +
+    geom_segment(aes(x = from_x, y = from_y, xend = to_x, yend = to_y),
+                 arrow = arrow(length = unit(0.25, "cm"),
+                               type = "closed")) +
+    theme_pitch() +
+    coord_flip() +
+    xlim(-10, 51) +
+    ylim(-15, 101) +
+    labs(title="한국과 독일 월드컵 예선", 
+         subtitle="김영권 첫골(90+2)") +
+    theme(legend.position = "none") +
+    geom_text(data=first_player_df, 
+        aes(x = x, y = y, label = name, family=c("NanumGothic")),
+        vjust = -1.5, color = "blue")
+```
+
+독일전 두번째 골은 연장 추가시간 막판 골키퍼까지 나와 만회골을 위해 혼신을 다하던 순간,
+주세종이 골을 뽑아내고 이를 손흥민에 연결하여 여유있게 골을 골망에 넣어 두번째골이 완성되었다.
+
+```{r germany-second-goal}
+# 2. 두번째 골 데이터 ------
+
+second_ball_df <- tribble(~from_x, ~from_y, ~to_x, ~to_y, 
+                   69.28, 15.52, 75.89, 22.89,
+                   75.89, 22.89, 24.28, 62.89,
+                   24.28, 62.89, 2.85, 60.52,
+                   2.85, 60.52, -1.07, 46.31)
+
+second_player_df <- tribble(~x, ~y, ~name, 
+                           69.28, 15.52, "주세종",
+                           24.28, 62.89, "손흥민")
+
+ggplot(second_ball_df) +
+    annotate_pitch() +
+    geom_point(aes(x=from_x, y=from_y, size=1.5, color="red")) +
+    geom_point(aes(x=to_x, y=to_y, size=1.5, color="red")) +
+    geom_segment(aes(x = from_x, y = from_y, xend = to_x, yend = to_y),
+                 arrow = arrow(length = unit(0.25, "cm"),
+                               type = "closed")) +
+    theme_pitch() +
+    coord_flip() +
+    xlim(-10, 101) +
+    ylim(-15, 101) +
+    labs(title="한국과 독일 월드컵 예선", 
+         subtitle="손흥민 두번째골(90+6)") +
+    theme(legend.position = "none") +
+    geom_text(data=second_player_df, 
+              aes(x = x, y = y, label = name, family=c("NanumGothic")),
+              vjust = -1.5, color = "blue")
+
+
+```
+
+
+
