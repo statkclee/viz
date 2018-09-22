@@ -47,7 +47,7 @@ title: 데이터 과학 -- 시각화
     - [국회의원 사진 - trelliscope](viz-congressman.html)
     - [저출산과 소요예산 - 상관관계](viz-low-birth-rate.html)
 - **시각화 실무**
-    - [세계보건기구(WHO) - 전문시각화](viz-who.html)
+    - [세계보건기구(WHO) - 전문시각화](viz_who.html)
     - [가구당 가계수지 - 10 분위별](viz-household-balance-deciles.html)
     - [러시아 월드컵(2018) - 한국 vs 독일](viz-worldcup-germany.html)
     - **treemap**
