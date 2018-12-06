@@ -53,6 +53,7 @@ title: 데이터 과학 -- 시각화
     - **treemap**
         - [대한민국 인구변화(2000 vs 2015) - treemap](viz-pop-treemap.html)
         - [지역내총생산 (GRDP) - treemap](viz-grdp-treemap.html)    
+    - [유통소매점 - 인터랙티브 heatmap](viz-retail-heatmap.html)
 
 ### [xwMOOC 오픈 교재](https://statkclee.github.io/xwMOOC/)
 
