@@ -1,37 +1,36 @@
 ---
 layout: page
 title: 데이터 과학
-subtitle: 시각화 (Visualization) 개요
+subtitle: "시각화 (Visualization) 개요"
+author:
+    name: xwMOOC
+    url: https://www.facebook.com/groups/tidyverse/
+    affiliation: Tidyverse Korea
+date: "`r Sys.Date()`"
 output:
   html_document: 
     toc: yes
-    keep_md: yes
-  pdf_document:
-    latex_engine: xelatex
-mainfont: NanumGothic
+    toc_float: true
+    highlight: tango
+    code_folding: show
+    number_section: true
+    self_contained: true
+editor_options: 
+  chunk_output_type: console
 ---
 
-```{r  include = FALSE}
-source("tools/chunk-options.R")
-library(tidyverse)
-library(ggplot2)
-library(gridExtra)
-library(lattice)
-library(DT)
-library(grid)
-library(datasauRus)
-````
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE,
+                      comment="", digits = 3, tidy = FALSE, prompt = FALSE, fig.align = 'center')
+```
 
 
-> ## 학습 목표  {.objectives}
->
-> * Anscombe 데이터를 통해 데이터 시각화의 중요성을 이해한다.
-> * Anscombe 데이터를 현대적으로 각색한 `datasauRus`도 살펴본다.
-> * 시각화 얼개를 통한 시각화를 목적과 방향을 탐색한다.
-> * 시각화 산출물을 만들어내는 3가지 R 시각화 시스템을 살펴본다.
 
+`Anscombe` 데이터를 통해 데이터 시각화의 중요성을 이해하고, 
+`Anscombe` 데이터를 현대적으로 각색한 `datasauRus`도 살펴본다.
+시각화 얼개를 통한 시각화를 목적과 방향을 탐색하고, 시각화 산출물을 만들어내는 3가지 R 시각화 시스템도 살펴본다.
 
-## 1. 시각화  [^tamara] 
+# 시각화  [^tamara]  {#viz-tamara}
 
 [^tamara]: [Tamara Munzner. Visualization Analysis and Design. A K Peters Visualization Series, CRC Press, 2014](http://www.cs.ubc.ca/~tmm/vadbook/)
 
@@ -43,24 +42,34 @@ library(datasauRus)
 또한, 많은 분석문제에는 어떤 질문을 던져야 되는지 사전에 알고 있는 경우가 적어, 명세가 분명하지 않는 경우가 있는데,
 이런 목적에 유용하다.
 
-> ### 시각화 {.callout}
-> 
-> "Computer-based visualization systems provide visual representations of datasets
+
+<style>
+div.blue { background-color:#e6f0ff; border-radius: 5px; padding: 10px;}
+</style>
+<div class = "blue">
+
+**시각화**
+ 
+"Computer-based visualization systems provide visual representations of datasets
  designed to help people carry out tasks more effectively" -- Tamara Munzner
 
+</div>
 
-### 1.1. 시각화가 왜 필요한가?
+> ### 
+
+
+## 시각화가 왜 필요한가? {#viz-tamara-why}
 
 **인지부하(cognitive load)**를 **시각적 지각(perception)**으로 바꿔 해당 작업을 더욱 효과적으로 처리하는데 시각화를 사용한다.
 
-``` {r viz-motivation, warning=FALSE, message=FALSE}
-# library(datasets)
-# library(tidyverse)
-# library(ggplot2)
-# library(gridExtra)
-# library(lattice)
-# library(DT)
-# library(grid)
+``` {r viz-motivation}
+library(datasets)
+library(tidyverse)
+library(ggplot2)
+library(gridExtra)
+library(lattice)
+library(DT)
+library(grid)
 
 datatable(women)
 ```
@@ -69,7 +78,7 @@ datatable(women)
 인지적으로 데이터 한줄을 읽고 머리속으로 생각하고, 두번째 줄을 읽고 생각하고, ... 이런 과정을 반복하면서 인지적 부하가 증가하게 된다.
 하지만, 시각적으로 표현하게 되면 한눈에 신장과 체중 관계를 볼 수 있다.
 
-``` {r viz-motivation-woman, warning=FALSE, message=FALSE}
+``` {r viz-motivation-woman}
 women %>% ggplot(aes(y=weight, x=height)) + 
     geom_point(color='blue', size=2) +
     geom_smooth(color='pink')
@@ -77,7 +86,7 @@ women %>% ggplot(aes(y=weight, x=height)) +
 
 
 
-### 1.2. Anscombe 4종류 데이터(Anscombe's Quartet) [^anscombe] [^anscombe-jstor]
+## Anscombe 4종류 데이터(Anscombe's Quartet) [^anscombe] [^anscombe-jstor] {#viz-anscombe}
 
 Anscombe는 1973년 동일한 통계량을 갖는 4종류 데이터셋을 만들어서 시각화의 중요성을 공개했다.
 
@@ -95,9 +104,9 @@ Anscombe는 1973년 동일한 통계량을 갖는 4종류 데이터셋을 만들
 [^anscombe-jstor]: Anscombe, F. J. (1973). "Graphs in Statistical Analysis". American Statistician 27 (1): 17–21.
 
 
-#### 1.2.1. Anscombe 데이터셋 4종 기술통계량
+### Anscombe 데이터셋 4종 기술통계량 {#viz-anscombe-descriptive}
 
-``` {r viz-motivation-anscombe, warning=FALSE, message=FALSE}
+``` {r viz-motivation-anscombe}
 data(anscombe)
 datatable(anscombe) 
 
@@ -143,7 +152,7 @@ unlist(gfits$reg3)
 unlist(gfits$reg4)
 ```
 
-#### 1.2.2. Anscombe 데이터셋 4종 시각화
+### Anscombe 데이터셋 4종 시각화 {#viz-anscombe-viz}
 
 ``` {r viz-motivation-quartet, warning=FALSE, message=FALSE}
 p1 <- ggplot(anscombe) + geom_point(aes(x1, y1), color = "darkorange", size = 3) + theme_bw() + scale_x_continuous(breaks = seq(0, 20, 2)) + scale_y_continuous(breaks = seq(0, 12, 2)) + geom_abline(intercept = 3, slope = 0.5, color = "cornflowerblue") + expand_limits(x = 0, y = 0) + labs(title = "dataset 1")
@@ -155,7 +164,7 @@ grid.arrange(p1, p2, p3, p4, ncol=2, top = "Anscombe's Quartet")
 ```
 
 
-### 1.3. 시각화 분석 얼개 구성요소 [^tamara-ieee]
+## 시각화 분석 얼개 구성요소 [^tamara-ieee] {#viz-framework}
 
 [^tamara-ieee]: [Munzner, Tamara. "A nested model for visualization design and validation." Visualization and Computer Graphics, IEEE Transactions on 15.6 (2009): 921-928.](http://www.cs.ubc.ca/~tmm/talks/iv09/nestedmodel-4x4.pdf)
 
@@ -176,7 +185,7 @@ grid.arrange(p1, p2, p3, p4, ncol=2, top = "Anscombe's Quartet")
 
 <img src="fig/viz-framework.png" alt="RStudio" width="77%" />
 
-### 1.4. 시각화 분석 접근방향
+## 시각화 분석 접근방향 {#viz-approach}
 
 시각화 시스템 실행시간, 메모리 사용량 등을 측정하고, 연산 복잡성을 분석하는 알고리즘 작업은 컴퓨터 과학자의 몫이다.
 여러가지 대안 시스템 아키텍처를 정당화하고 시각적 인코딩 방법과 상호작용하는 표현양식을 설계하는 것은 시스템 설계자의 몫이다.
@@ -187,13 +196,21 @@ grid.arrange(p1, p2, p3, p4, ncol=2, top = "Anscombe's Quartet")
 이 모든 시작은 전문영역에서 문제점을 인식하고 기존의 도구를 사용하는 목표 사용자를 관측하는 것에서 시작되는데 이는 인류학자, 민족지라는 분야와 연관된다.
 따라서, 기술중심으로 밖으로 퍼져나갈 수도 있지만, 문제해결작업으로 시각화를 활용하는 것도 가능한 접근법이다.
 
-> ### 시각화 도구{.callout}
-> 
-> - **명령형(imperative)**: "방법(how)"에 초점, Processing, OpenGL, prefuse
-> - **선언형(declarative)**: "무엇(what)"에 초점, D3, ggplot2, Protovis 
+<style>
+div.blue { background-color:#e6f0ff; border-radius: 5px; padding: 10px;}
+</style>
+<div class = "blue">
+
+**시각화 도구**
+
+- **명령형(imperative)**: "방법(how)"에 초점, Processing, OpenGL, prefuse
+- **선언형(declarative)**: "무엇(what)"에 초점, D3, ggplot2, Protovis 
+
+</div>
 
 
-## 2. R 시각화 시스템 [^coursera-r-plotting-system]
+
+# R 시각화 시스템 [^coursera-r-plotting-system] {#viz-R-system}
 
 [^coursera-r-plotting-system]: [코세라 Lecture 10 - Plotting Systems in R](https://www.coursera.org/learn/exploratory-data-analysis/lecture/MTRt4/plotting-systems-in-r)
 
@@ -212,7 +229,7 @@ R에는 다양한 시각화 관련 시스템이 존재하지만, 가장 대표�
 |`ggplot` 시각화  |      1,566       |
 
 
-### 3.1. Base 시각화 시스템
+## Base 시각화 시스템 {#viz-base}
 
 R설치하면 내장된 Base 시각화 시스템은 **화가의 팔레트(Artist Palallete)** 모형으로 빈 도화지 캔바스 위에 화가가 그림을 그리는 것과 동일한 방식으로 시각화 산출물을 만들어 나간다.
 `plot()` 혹은 유사한 시각화 함수로 시작해서 텍스트(`text`), 선(`line`), 점(`point`), 축(`axis`) 등을 표현하는데  **주석(Annotation)** 함수를 활용한다.
@@ -221,13 +238,13 @@ R설치하면 내장된 Base 시각화 시스템은 **화가의 팔레트(Artist
 만드는 초기부터 시간을 갖고 잘 설계해 나가야 된다. 그리고, 시각화 산출물이 생성되면 다른 것으로 변환하기 어려운 단점이 있고, 그래픽 언어가 아니라 일련의 R 명령어
 묶음에 불가하다.
 
-``` {r viz-base, warning=FALSE, message=FALSE}
+``` {r viz-base}
 #1. Base 시각화 시스템----------------------------------------------------------------
 data(mtcars)
 with(mtcars, plot(disp, mpg))
 ```
 
-### 3.2. `lattice` 시각화 시스템
+## `lattice` 시각화 시스템 {#viz-lattice}
 
 `lattice` 시각화 시스템은 `lattice` 팩키지를 통해 설치되고, 함수 호출(`xyplot()`, `bwplot()` 등)을 통해 시각화 산출물을 생성하게 된다.
 조건에 따라 일변량 혹은 다변량 변수를 시각화하는데 유용하다. 즉, 특정 범주형 변수 수준에 따라 두 변수간의 관계를 시각적으로 표현하는 것을 예로 들 수 있다.
@@ -240,12 +257,12 @@ with(mtcars, plot(disp, mpg))
 공식으로 표현할 수 있다는 점은 큰 장점중 하나다.
 
 
-``` {r viz-lattice, warning=FALSE, message=FALSE}
+``` {r viz-lattice}
 #2. Lattice 시각화 시스템----------------------------------------------------------------
 xyplot(mpg ~ disp | am, data=mtcars, layout=c(2,1))
 ```
 
-### 3.3. `ggplot` 시각화 시스템
+## `ggplot` 시각화 시스템 {#viz-ggplot}
 
 `ggplot` 시각화 시스템은 `ggplot2` 팩키지를 통해 설치가 가능하다. Base 시각화 시스템과 `lattice` 시각화 시스템의 장점을 취사선택해서 개발된 것으로 보는 견해도 있다.
 그래픽 문법(Grammer of Graphic)에 기반하고 있으며, `lattice` 시각화 시스템처럼 공백, 텍스트, 제목 등을 자동으로 설정하고,
@@ -259,7 +276,7 @@ ggplot(data=mtcars, mapping=aes(x=disp, y=mpg)) +
   geom_smooth(method="lm", se=FALSE)
 ```
 
-### 3.4. `grid` 시각화 시스템
+## `grid` 시각화 시스템 {#viz-grid}
 
 `grid` 시각화 시스템은 `lattice`와 `ggplot`의 기반이 되는 시각화 시스템으로 R 버전 1.8.0 부터 Base 팩키지의 일부가 되었다.[^grid-viz-system]
 grid_0.7-4에서 [Base 팩키지 일부](https://stat.ethz.ch/R-manual/R-devel/library/grid/doc/changes.txt)가 되어 버젼이 Base 팩키지에 맞춰 버젼이 급상승했다.
@@ -269,7 +286,7 @@ grid_0.7-4에서 [Base 팩키지 일부](https://stat.ethz.ch/R-manual/R-devel/l
 
 [^grid-viz-system]: [R package grid disappeared?](http://stackoverflow.com/questions/29349398/r-package-grid-disappeared)
 
-``` {r viz-grid, warning=FALSE, message=FALSE}
+``` {r viz-grid}
 
 x <- mtcars$disp
 y <- mtcars$mpg
@@ -285,7 +302,7 @@ grid.text("mtcars$mpg", y = unit(-3, "lines"), rot = 0)
 popViewport(2)
 ```
 
-## 3. 데이터공룡(datasauRus) [^acm-chi-2017]
+# 데이터공룡(datasauRus) [^acm-chi-2017] {#viz-datasaurus}
 
 [^acm-chi-2017]: [Justin Matejka and George Fitzmaurice(2017), Same Stats, Different Graphs: Generating Datasets with Varied Appearance and Identical Statistics through Simulated Annealing, ACM SIGCHI Conference on Human Factors in Computing Systems](https://www.autodeskresearch.com/publications/samestats)
 
@@ -303,8 +320,8 @@ Anscombe 4종류 데이터에 버금가는 데이터공룡(Datasaurus)은 그 �
 혁신의 바람과 속도가 엄청나다는 것에 감탄이 절로 난다.
 $\mu_x$ 평균, $\mu_y$ 평균, $\sigma_x$ 표준편차, $\sigma_y$ 표준편차, $\rho_{xy}$ 상관계수가 소수점아래 두자리에서 동일하다.
 
-``` {r viz-datasaurus, warning=FALSE, message=FALSE}
-# library(datasauRus)
+``` {r viz-datasaurus}
+library(datasauRus)
 datasaurus_dozen %>% 
     group_by(dataset) %>% 
     summarize(

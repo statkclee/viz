@@ -16,7 +16,6 @@ title: 데이터 과학 -- 시각화
 
 - [시각화(Visualization)](viz.html)
     - [기념비적인 시각화 역작모음](viz-history.html)
-- **시각화 기본지식**
     - [행복한 시각화 생활을 위한 비밀](viz-secret.html)
     - [R 그래프 글꼴(font)](viz-r-font.html)
     - [R 과 색상](viz-r-colors.html)
