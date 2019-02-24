@@ -1,30 +1,106 @@
 ---
 layout: page
-title: 데이터 과학
-subtitle: R 그래프 글꼴(font)
+title: 데이터 시각화
+subtitle: "R 그래프/코딩 글꼴(font)"
+author:
+    name: xwMOOC
+    url: https://www.facebook.com/groups/tidyverse/
+    affiliation: Tidyverse Korea
+date: "`r Sys.Date()`"
+output:
+  html_document: 
+    toc: yes
+    toc_float: true
+    highlight: tango
+    code_folding: show
+    number_section: true
+    self_contained: true
+editor_options: 
+  chunk_output_type: console
 ---
 
 
 ```{r, include=FALSE}
-source("tools/chunk-options.R")
-library(ggplot2)
-library(scales)
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE,
+                    comment="", digits = 3, tidy = FALSE, prompt = FALSE, fig.align = 'center')
+
 library(tidyverse)
+library(scales)
 library(showtext) # 글꼴, install.packages("showtext")
 library(extrafont)
 loadfonts()
-options(warn=-1)
 ```
 
-> ## 학습 목표 [^showtext-font] {.objectives}
->
-> * R 그래프에 한글 글꼴을 적용한다.
-> * `extrafont`와 `showtext` 팩키지를 활용하여 한글 글꼴을 사용한다.
+R 스크립트 작성을 위한 글꼴과 그래프에 한글 글꼴(font)을 적용한다. 
+`ggplot`을 비롯한 시각화를 위해 `extrafont`와 `showtext` 팩키지를 활용하여 한글 글꼴을 사용하고 
+특히 R 스크립트(`.r`) 및 R마크다운(`.Rmd`)에서 한글글꼴 사용을 위해서 코딩관련 글꼴도 설치한다.
+
+기본적인 작업흐름은 운영체제에 먼저 외부에서 가져온 폰트를 설치한다. 
+그리고 나서 `extrafont` 팩키지 `font_import()` 함수를 사용해서 폰트를 R에서 불러 사용할 수 있도록 설치한다. 그리고 나서 `loadfonts()` 함수를 사용해서 글꼴을 `ggplot`등에서 불러 사용한다.
+
+<img src="fig/viz_r_font.png" alt="R 폰트/글꼴 설치" width="100%" />
+
+# RStdio IDE R 코딩 개발 글꼴 {#r-coding-font}
+
+문서를 위해 작성하는데 사용되는 글꼴과 R 코딩을 위해 사용되는 글꼴은 차이가 난다.
+왜냐하면 R 코딩에 사용되는 글꼴은 가독성이 좋아야하고 디버깅에 용이해야 된다.
+영어는 `consolas` 글꼴을 많이 사용하는데 무료가 아니다. 그래서
+`consolas`에서 영감을 받은 SIL 오픈 폰트 라이선스를 따르는 [Inconsolata](https://en.wikipedia.org/wiki/Inconsolata)가 R 코딩에 많이 사용되고 있다.
+하지만, R코드를 작성할 때 주석을 한글로 달거나 R마크다운 작업을 할 경우 유사한 기능을 하는 한글 글꼴이 필요하다.
+
+- [네이버 나눔고딕 코딩글꼴](https://github.com/naver/nanumfont/blob/master/README.md)
+- [D2 Coding 글꼴](https://github.com/naver/d2codingfont)
+
+"네이버 나눔고딕 코딩글꼴"과 "D2 Coding 글꼴"을 설치하고 나서 RStudio IDE에서 "Tools " &rarr; "Global Options..."를 클릭하면 "Options"창에서 `Appearance`에서 **Editor font:**에서 설치한 코딩전용 글꼴을 선택하고 **Editor theme:**도 지정한다.
+
+<img src="fig/d2coding_font.png" alt="D2 코딩폰트 설치" width="77%" />
+
+# `ggplot` 시각화 글꼴 {#r-viz-font}
+
+## 글꼴 설치 {#r-viz-font-setup}
+
+`extrafont` 팩키지에서 `font_import()` 함수로 운영체제(윈도우/리눅스)에 설치된 글꼴을 R로 가져온다. 그리고 나서 `loadfonts()` 함수를 사용해서 설치된 글꼴을 사용하는 작업흐름을 따르게 된다.
+
+```{r extrafont-in-r, eval=FALSE}
+library(extrafont)
+font_import(pattern = "D2")
+
+Importing fonts may take a few minutes, depending on the number of fonts and the speed of the system.
+Continue? [y/n] y
+Scanning ttf files in C:\Windows\Fonts ...
+Extracting .afm files from .ttf files...
+C:\Windows\Fonts\D2Coding-Ver1.3.2-20180524.ttf => C:/Users/tidyverse_user/Documents/R/win-library/3.5/extrafontdb/metrics/D2Coding-Ver1.3.2-20180524
+C:\Windows\Fonts\D2CodingBold-Ver1.3.2-20180524.ttf => C:/Users/tidyverse_user/Documents/R/win-library/3.5/extrafontdb/metrics/D2CodingBold-Ver1.3.2-20180524
+C:\Windows\Fonts\MOD20.TTF => C:/Users/tidyverse_user/Documents/R/win-library/3.5/extrafontdb/metrics/MOD20
+Found FontName for 3 fonts.
+Scanning afm files in C:/Users/tidyverse_user/Documents/R/win-library/3.5/extrafontdb/metrics
+Writing font table in C:/Users/tidyverse_user/Documents/R/win-library/3.5/extrafontdb/fontmap/fonttable.csv
+Writing Fontmap to C:/Users/tidyverse_user/Documents/R/win-library/3.5/extrafontdb/fontmap/Fontmap...
+
+font_import(pattern = "Nanum")
+```
+
+
+## `ggplot` 한글 글꼴 사례 {#r-viz-font-example}
+
+
+```{r ggplot-extrafont-in-r}
+library(tidyverse)
+library(extrafont)
+loadfonts()
+
+iris %>% 
+  ggplot(aes(x=Sepal.Length, y=Petal.Length, color=Species)) +
+    geom_point()+
+    labs(title="붓꽃 데이터 한글 글꼴 적용", color="붓꽃 종류") +
+    theme_minimal(base_family = "Nanum Pen Script") +
+    theme(legend.position = "top")
+
+```
+
+# `showtext` 팩키지 [^showtext-font] {#korean-font}
 
 [^showtext-font]: [showtext: Using Fonts More Easily in R Graphs](https://cran.rstudio.com/web/packages/showtext/index.html)
-
-
-## 1. 한글글꼴 `showtext` 팩키지
 
 [extrafont](https://github.com/wch/extrafont) 팩키지를 통해 한자를 포함한 한글을 처리할 수 있었으나,
 [extrafont](https://github.com/wch/extrafont)는 트루타입폰트(`.ttf`)를 PDF 그래픽 장치에 초점을 맞춰 개발이 되었다.
@@ -44,24 +120,22 @@ options(warn=-1)
 내부적으로 상세 작동 로직은 글꼴 위치를 파악해서 글리프(glyph) 정보를 추출하고 비트맵 형식, 벡터그래픽 형식에 따라서
 비트맵일 경우 `raster()` 장치함수를 호출하고, 벡터그래픽인 경우 `path()` 장치함수를 호출해서 기능을 수행한다.
 
-## 2. 한글 폰트 그래프 사용
+## 한글 폰트 그래프 사용 {#showtext-korean-example}
 
-### 2.1. 환경설정
+### 환경설정 {#showtext-korean-example-setup}
 
 `extrafont` 팩키지 `loadfonts()` 함수를 통해 `.ttf` 파일 정보를 확인한다. 
 아직 [구글 글끌](http://www.google.com/fonts) 페이지에서 한글 글꼴을 지원하지 않고 있다.
 
 ``` {r showtext-font-setup, eval=FALSE}
 # 0. 환경설정 --------------------------------------------------------------------------
-library(ggplot2)
-library(scales)
 library(tidyverse)
 library(showtext) # 글꼴, install.packages("showtext")
 library(extrafont)
 loadfonts()
 ```
 
-### 2.2. 구글 글꼴 설치 및 기본 그래픽 
+### 구글 글꼴 설치 및 기본 그래픽  {#showtext-korean-example-google}
 
 ``` {r showtext-showtext-install, warn=FALSE, message=FALSE}
 # 1. 기본(Base) 그래픽 --------------------------------------------------------------------------
@@ -83,7 +157,7 @@ title(ylab = "Frequency", family = "gochi", cex.lab = 2)
 text(2, 70, "N = 1000", family = "bell", cex = 2.5)
 ```
 
-### 2.3. ggplot 글꼴 활용
+### `ggplot` 글꼴 활용 {#showtext-korean-example-ggplot}
 
 `ggplot`을 통해 showtext 활용 기본 작업흐름을 살펴본다.
 
@@ -99,7 +173,7 @@ text(2, 70, "N = 1000", family = "bell", cex = 2.5)
 dat <- data.frame(cond = factor(rep(c("A","B"), each=200)), 
                   rating = c(rnorm(200),rnorm(200, mean=.8)))
 
-font.add.google("Schoolbell", "bell")
+font_add_google("Schoolbell", "bell")
 
 showtext.begin()
 
@@ -109,7 +183,7 @@ ggplot(dat, aes(x=rating)) +
 showtext.end()
 ```
 
-### 2.4. 한글 글꼴 그래픽으로 표현
+### 한글 글꼴 그래픽으로 표현 {#showtext-korean-example-ttf}
 
 로컬 컴퓨터에 저장된 `.ttf` 파일을 사용자 지정해서 가져온 후 이를 `ggplot`에 반영하여 
 한글을 R 그래프에 적용한다.
@@ -117,7 +191,7 @@ showtext.end()
 ``` {r showtext-showtext-korean}
 # ３. 한글 그래픽 --------------------------------------------------------------------------
 ## 나눔펜　스크립트
-font.add("NanumBarunGothic", "NanumBarunGothic.ttf")
+font_add("NanumBarunGothic", "NanumBarunGothic.ttf")
 
 showtext.auto()
 
@@ -130,3 +204,4 @@ p <- ggplot(NULL, aes(x = 1, y = 1)) + ylim(0.8, 1.2) +
            family = "NanumBarunGothic", size = 12)
 
 print(p)
+```
