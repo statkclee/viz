@@ -1,40 +1,44 @@
 ---
 layout: page
-title: 데이터 과학
-subtitle: 기념비적인 시각화 역작모음
+title: 데이터 시각화
+subtitle: "기념비적인 시각화 역작모음"
+author:
+    name: xwMOOC
+    url: https://www.facebook.com/groups/tidyverse/
+    affiliation: Tidyverse Korea
+date: "`r Sys.Date()`"
 output:
   html_document: 
     toc: yes
     toc_float: true
     highlight: tango
-    number_section: true
     code_folding: show
-mainfont: NanumGothic
+    number_section: true
+    self_contained: true
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r  include = FALSE}
-source("tools/chunk-options.R")
-
 knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE,
-                    comment="", digits = 3, tidy = FALSE, prompt = TRUE, fig.align = 'center')
+                    comment="", digits = 3, tidy = FALSE, prompt = FALSE, fig.align = 'center')
 
 library(ggplot2)
 library(maps)
 library(mapproj)
 library(HistData) #  데이터
-````
+```
 
 
-역사에 길이 남을 기념비적인 시각화 역작을 살펴보자. [^data-visualization-of-all-time]
+역사에 길이 남을 기념비적인 시각화 역작을 살펴보자. [^friendly-history] [^data-visualization-of-all-time] [^dataviz-timeline] 
+
+[^friendly-history]: [Michael Friendly, "A Brief History of Data Visualization", In Handbook of Computational Statistics: Data Visualization, C. Chen, W. Härdle, A Unwin (Ed.), Heidelberg: Springer-Verlag, Ch. 1, pp. 1–34, 2007.](http://byrneslab.net/classes/data_science/readings/Friendly_2008_dataviz_history.pdf)
 
 [^data-visualization-of-all-time]: [Tableau Software(2012), The 5 most influential data visualizations of all time](https://www.slideshare.net/TableauSoftware/the-5-most-influential-data-visualizations-of-all-time)
 
-1. Chart of Biography – Joseph Priestley 
-1. War Mortality – Florence Nightingale
-1. March on Moscow – Charles Minard
-1. Gapminder – Rosling
-1. London Cholera Map – John Snow
+[^dataviz-timeline]: [DataVis.ca, "Milestones Project"](http://datavis.ca/milestones/)
 
+<img src="fig/viz-history.png" alt="데이터 시각화 역사" width="100%" />
 
 # 나폴레옹 러시아 침공 {#march-on-moscow}
 
@@ -74,25 +78,92 @@ plot_polished <- ggplot(troops, aes(long, lat)) +
 plot_polished
 ```
 
-# 존 스노우 콜레라 {#snow-cholera-map}
+# 존 스노우 콜레라 [^cholera-plot] [^snow-london] {#snow-cholera-map}
 
-<img src="fig/john-snow-cholera-outbreak-map.png" alt="John Snow 콜레라 발병 지도" width="100%" />
+[^cholera-plot]: [R Package for Analyzing John Snow's 1854 Cholera Map](https://github.com/lindbrook/cholera)
 
-# 갭 마인더(Gapminder–Rosling) {#gapminder-rosling}
+[^snow-london]: [Kanchana Kovalam (March 29, 2017), "Kanchana Kovalam_512 90_Spring 2017_Remapping Snows Data"](https://rpubs.com/kanch/263664)
 
-<img src="fig/gapminder_rosling.jpg" alt="갭 마인더 - 로슬링" width="100%" />
+<img src="fig/john-snow-cholera-outbreak-map.png" alt="John Snow 콜레라 발병 지도" width="50%" />
+
+```{r dataviz-snow}
+library(cholera)
+par(mfrow=c(1,2))
+
+plot(neighborhoodVoronoi())
+plot(neighborhoodWalking())
+```
 
 
-# 나이팅게일 사망자수(War Mortality) {#nightingale-war-mortality}
+# 갭마인더(Gapminder - Hans Rosling) [^gapminder-gganimate]   {#gapminder-rosling}
 
-<img src="fig/Nightingale-mortality.jpg" alt="나이팅게일 전쟁 사망자수" width="100%" />
+[^gapminder-gganimate]: [DataNovia, "GGANIMATE: HOW TO CREATE PLOTS WITH BEAUTIFUL ANIMATION IN R"](https://www.datanovia.com/en/blog/gganimate-how-to-create-plots-with-beautiful-animation-in-r/)
+
+<iframe width="300" height="180" src="https://www.youtube.com/embed/jbkSRLYSojo" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+```{r gapminder-dataviz}
+library(gapminder)
+library(gganimate)
+
+ggplot(gapminder, aes(gdpPercap, lifeExp, size = pop, colour = country)) +
+  geom_point(show.legend = FALSE, alpha = 0.7) +
+  scale_color_viridis_d() +
+  scale_size(range = c(2, 12)) +
+  scale_x_log10() +
+  labs(title = '연도: {frame_time}', x = '1인당 GDP', y = '기대수명') +
+  transition_time(year) +
+  ease_aes('linear')
+```
+
+
+# 나이팅게일 사망자수(War Mortality) [^nightingale-war-mortality] {#nightingale-war-mortality}
+
+[^nightingale-war-mortality]: [Nguyen Chi Dung, "Florence Nightingale’s Data On Deaths From Various Causes In The Crimean War"](https://rpubs.com/chidungkt/371875)
+
+<img src="fig/Nightingale-mortality.jpg" alt="나이팅게일 전쟁 사망자수" width="57%" />
+
+```{r war-mortality}
+library(HistData)
+data(Nightingale)
+library(tidyverse)
+library(ggthemes)
+library(extrafont)
+loadfonts()
+
+mortality_df <- Nightingale %>% 
+  select(Date, Disease.rate, Wounds.rate, Other.rate) %>% 
+  gather(Cause, Deaths, -Date) %>% 
+  mutate(Cause = str_replace_all(Cause, "\\.rate", ""), 
+         Regime = rep(c(rep("Before", 12), rep("After", 12)), 3)) %>% 
+  mutate(Regime = factor(Regime, levels=c("Before", "After")))
+
+cp <- coord_polar(start = 3*pi/2)
+cp$is_free <- function() TRUE
+
+mortality_df %>% 
+  ggplot(aes(x = factor(Date), y = Deaths, fill = Cause)) +
+  geom_col(color = "black") + 
+  scale_y_sqrt() +
+  # facet_wrap( ~ Regime, scales = "free", labeller = label_both) +
+  facet_wrap( ~ Regime, scales = "free_x", labeller = label_both) + 
+  cp +
+  labs(x = NULL, y = NULL, 
+       fill = "병사 사망원인",
+       title = "크림전쟁 병사 사망원인 - 나이팅게일", 
+       caption = "데이터 출처: 크림전쟁 병사 사망원인 데이터 종합") + 
+  theme_fivethirtyeight(base_family = "NanumGothic") + 
+  scale_fill_fivethirtyeight() +
+  theme(legend.position = "top")
+
+```
+
 
 # 전기 도표(Chart of Biography) {#chart-biography}
 
-<img src="fig/Chart_of_Biography.jpg" alt="전기도표" width="100%" />
+<img src="fig/Chart_of_Biography.jpg" alt="전기도표" width="57%" />
 
 # 마이애미 헤럴드 허리케인 피해 GIS 지도 [^miami-hurricane-map] {#hurricane-map}
 
-<img src="fig/miami-hurricane.jpg" alt="마이애미 허리케인" width="100%" />
+<img src="fig/miami-hurricane.jpg" alt="마이애미 허리케인" width="47%" />
 
 [^miami-hurricane-map]: [RICHARD BEDFORD, Why a journalist should use GIS – Views from the leading experts](https://richybedford.wordpress.com/2014/01/10/why-journalists-sould-use-geographic-information-systems-gis-the-views-of-leading-data-journalism-experts/)
