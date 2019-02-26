@@ -1,0 +1,80 @@
+---
+layout: page
+title: 데이터 시각화
+subtitle: "R 시각화 색상(color)"
+author:
+    name: xwMOOC
+    url: https://www.facebook.com/groups/tidyverse/
+    affiliation: Tidyverse Korea
+date: "`r Sys.Date()`"
+output:
+  html_document: 
+    toc: yes
+    toc_float: true
+    highlight: tango
+    code_folding: show
+    number_section: true
+    self_contained: true
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r  include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE,
+                    comment="", digits = 3, tidy = FALSE, prompt = FALSE, fig.align = 'center')
+
+library(tidyverse)
+library(scales)
+library(showtext) # 글꼴, install.packages("showtext")
+library(extrafont)
+loadfonts()
+```
+
+# 데이터 픽셀 비율 [^data-to-pixel-ratio] {#data-pixel-ratio}
+
+[^data-to-pixel-ratio]: [Peter Prevos (February 24, 2019), "Strategic Data Science: Creating Value With Data Big and Small", The Lucid Manager](https://lucidmanager.org/strategic-data-science/)
+
+시각화의 중요한 원칙중의 하나는 화면 전체 픽셀(pixel)과 정보를 표현하는 픽셀 비율을 
+최대화하는 것이다. 흔히 데이터와 픽셀 비율(data to pixel ratio)로 계량화하는데 
+데이터-픽셀 비율이 낮는 경와 데이터-픽셀 비율이 높은 경우를 다음 사례를 통해 쉽게 파악할 수 있다.
+
+<img src="fig/data-to-pixel-ratio.png" alt="데이터와 픽셀 비율" width="100%" />
+
+
+# 강조(하이라이트) [^anatomy-gghighlight] {#gghighlight}
+
+[^anatomy-gghighlight]: [Hiroaki Yutani (June 3, 2018), "Anatomy of gghighlight"](https://yutani.rbind.io/post/2018-06-03-anatomy-of-gghighlight/)
+
+[`gghighlight`](https://github.com/yutannihilation/gghighlight) 팩키지를 통해 직접 특정부분을 강조하는 시각화 산출물을 작성해도 좋지만, ["Anatomy of gghighlight"](https://yutani.rbind.io/post/2018-06-03-anatomy-of-gghighlight/) 블로그 내용을 바탕으로 강조(하이라이트)하는 원칙을 살펴보자.
+
+## 강조(하이라이트) 원리 [^ggplot-background] {#gghighlight-anatomy}
+
+[^ggplot-background]: [BLOGR (2016), "Plotting background data for groups with ggplot2"](https://drsimonj.svbtle.com/plotting-background-data-for-groups-with-ggplot2)
+
+붓꽃 `iris` 데이터를 배경을 깔고 종별로 히스토그램을 비교하는 시각화 산출물을 작성해 보자.
+
+이를 위해서 먼저 `iris_bg` 데이터프레임을 하나 제작하고 `Sepal.Width` 변수로 히스토그램을 작성한다. 
+`iris_bg` 배경 데이터프레임으로 히스토그램을 만들고 `facet_warp()` 함수로 종별로 히스토그램을 완성시킨다. 원리는 `geom_histogram()` 첫번째 히스토그램은 `iris_bg` 데이터프레임을 활용하여 종족이 없는 `Sepal.Width` 전체 종에 대한 히스토그램을 만들고, 두번째 히스토그램은 디폴트 설정된 색이 반영된 `iris` 데이터프레임에 대한 색상을 얻게된 히스토그램이 제작된다. 마지막으로 `facet_wrap()`으로 붓꽃 종별로 히스토그램이 나뉘어서 시각화된다.
+
+```{r gghighlight-anatomy-iris}
+library(tidyverse)
+
+iris_bg <- iris[, -5]  # Background Data - full without the 5th column (Species)
+
+ggplot(iris, aes(x = Sepal.Width)) +
+  geom_histogram(data = iris_bg, fill = "grey") +
+  geom_histogram() +
+  facet_wrap(~ Species)
+```
+
+색상도 각 붓꽃 종별로 넣고 보기좋게 작업한 코드는 다음과 같다.
+
+```{r gghighlight-anatomy-iris-color}
+ggplot(iris, aes(x = Sepal.Width, fill = Species)) +
+  geom_histogram(data = iris_bg, fill = "grey", alpha = .5) +
+  geom_histogram(colour = "black") +
+  facet_wrap(~ Species) +
+  guides(fill = FALSE) +  # to remove the legend
+  theme_bw()              # for clean look overall
+```
+

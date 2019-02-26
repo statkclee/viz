@@ -21,6 +21,7 @@ title: 데이터 과학 -- 시각화
     - [R 시각화 색상(color)](viz-r-colors.html)
     - [그래프 한장에 그래프 다수 찍기](viz-multiple-plots.html)
     - [그림을 파일에 저장](viz-save-plot.html) 
+    - [시각화 픽셀 정보량 극대화](viz-pixel-information.html)
 - **정적 그래프 - `ggplot`**
     - [`ggplot2` 색상 제어](viz-ggplot2-control.html)
     - [데이터 시각화(ggplot2, ggvis)](viz-ggplot2.html)    
