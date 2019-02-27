@@ -30,16 +30,19 @@ library(extrafont)
 loadfonts()
 ```
 
-# 데이터 픽셀 비율 [^data-to-pixel-ratio] {#data-pixel-ratio}
+# 데이터 픽셀 비율 [^data-to-pixel-ratio] [^bbc-style] [^bbc-rcookbook] {#data-pixel-ratio}
 
 [^data-to-pixel-ratio]: [Peter Prevos (February 24, 2019), "Strategic Data Science: Creating Value With Data Big and Small", The Lucid Manager](https://lucidmanager.org/strategic-data-science/)
+
+[^bbc-style]: [BBC - `bbplot`](https://github.com/bbc/bbplot)
+
+[]: ["BBC Visual and Data Journalism cookbook for R graphics"](https://bbc.github.io/rcookbook/)
 
 시각화의 중요한 원칙중의 하나는 화면 전체 픽셀(pixel)과 정보를 표현하는 픽셀 비율을 
 최대화하는 것이다. 흔히 데이터와 픽셀 비율(data to pixel ratio)로 계량화하는데 
 데이터-픽셀 비율이 낮는 경와 데이터-픽셀 비율이 높은 경우를 다음 사례를 통해 쉽게 파악할 수 있다.
 
 <img src="fig/data-to-pixel-ratio.png" alt="데이터와 픽셀 비율" width="100%" />
-
 
 # 강조(하이라이트) [^anatomy-gghighlight] {#gghighlight}
 
@@ -78,3 +81,142 @@ ggplot(iris, aes(x = Sepal.Width, fill = Species)) +
   theme_bw()              # for clean look overall
 ```
 
+`gghighlight` 팩키지를 활용하여 붓꽃 종별로 강조 하이라이트를 수월히 할 수 있다.
+
+
+```{r gghiglight-package-iris}
+library(gghighlight)
+
+species_g <- ggplot(iris, aes(Sepal.Length, fill = Species)) +
+  geom_histogram() +
+  theme(legend.position = "top")
+
+species_highlight_g <- ggplot(iris, aes(Sepal.Length, fill = Species)) +
+  geom_histogram() +
+  gghighlight() +
+  facet_wrap(~ Species)
+
+cowplot::plot_grid(species_g, species_highlight_g)
+```
+
+# 강조(하이라이트) 사례 {#gghighlight-case-study}
+
+## 막대그래프 강조(하이라이트) {#gghighlight-barplot}
+
+### 막대그래프 색상 {#gghighlight-barplot-ifelse}
+
+`geom_bar()` 함수에 `fill=` 인자를 `if_else()`와 결합하여 색상을 달리 차별화 시킨다.
+
+```{r gghighlight-point}
+library(bbplot)
+library(tidyverse)
+library(gapminder)
+library(extrafont)
+loadfonts()
+
+top_five_df <- gapminder %>%
+  filter(year == 2007 & continent == "Africa") %>%
+  top_n(5, wt=lifeExp)
+
+top_five_df %>% 
+  ggplot(aes(x = fct_reorder(country, lifeExp), y = lifeExp)) +
+  geom_bar(stat="identity", position="identity", 
+           fill=if_else(top_five_df$country == "Tunisia", "#1380A1", "#dddddd")) +
+  geom_hline(yintercept = 0, size = 1, colour="#333333") +
+  theme_minimal(base_family="NanumGothic") +
+  coord_flip() +
+  labs(title="레위니옹(Reunion)이 장수국가",
+       subtitle = "아프리카 2007년 기대수명 상위국가") +
+  theme(panel.grid.major.x = element_line(color="#cbcbcb"), 
+        panel.grid.major.y=element_blank()) +
+  labs(x="", y="기대수명")
+```
+
+### 막대그래프 + 라벨 {#gghighlight-barplot-label}
+
+`geom_label()` 함수에 `aes()` 함수 내부에 `label=` 인자를 넣어 라벨을 붙일 수 있고, 
+라벨 색상을 `color=` 인자에 `if_else()`를 조합시켜 강조하여 가시성을 높인다.
+
+```{r gghighlight-barplot-highlight}
+top_five_df <- gapminder %>%
+  filter(year == 2007 & continent == "Africa") %>%
+  top_n(5, wt=lifeExp)
+
+top_five_df %>% 
+  ggplot(aes(x = fct_reorder(country, lifeExp), y = lifeExp)) +
+  geom_bar(stat="identity", position="identity", 
+           fill=if_else(top_five_df$country == "Tunisia", "#1380A1", "#dddddd")) +
+  geom_hline(yintercept = 0, size = 1, colour="#333333") +
+  theme_minimal(base_family="NanumGothic") +
+  coord_flip() +
+  labs(title="레위니옹(Reunion)이 장수국가",
+       subtitle = "아프리카 2007년 기대수명 상위국가") +
+  theme(panel.grid.major.x = element_line(color="#cbcbcb"), 
+        panel.grid.major.y=element_blank()) +
+  labs(x="", y="기대수명") +
+  geom_label(aes(x = country, 
+                 y = lifeExp - 6, 
+                 label = round(lifeExp, 0)), 
+             hjust = 0, 
+             vjust = 0.5, 
+             colour = if_else(top_five_df$country == "Tunisia", "red", "#dddddd"), 
+             fill = NA, 
+             label.size = NA,
+             family="Nanum Pen Script", 
+             size = 10)
+```
+
+## 선그래프 강조(하이라이트) {#gghighlight-lineplot}
+
+### 선그래프 색상 {#gghighlight-lineplot-ifelse}
+
+`geom_line()` 선그래프 색상을 `scale_colour_manual()` 함수에 `value=` 인자를 달리하여 차별화할 수 있다. 
+
+```{r gghighlight-asia-line-colour}
+oceania_df <- gapminder %>%
+  filter(continent == "Oceania") 
+
+oceania_df %>% 
+  ggplot(aes(x = year, y = lifeExp, colour = country)) +
+    geom_line(size = 1) +
+    scale_colour_manual(values = c("#FAAB18", "#dddddd")) +
+    theme_minimal(base_family = "NanumGothic") +
+    labs(title="호주가 장수국가",
+         subtitle = "호주와 뉴질랜드 기대수명 비교") +
+    theme(legend.position = "top") +
+    labs(x="", y="기대수명") 
+```
+
+
+### 선그래프 색상 + 라벨 {#gghighlight-lineplot-ifelse-label}
+
+또한, `geom_label()`과 `geom_curve()`를 사용하여 특정 지점에 화살표를 넣어 라벨을 붙여 강조하는 것도 가능하다.
+
+```{r gghighlight-asia}
+oceania_df <- gapminder %>%
+  filter(continent == "Oceania") 
+
+oceania_df %>% 
+  ggplot(aes(x = year, y = lifeExp, colour = country)) +
+    geom_line(size = 1) +
+    scale_colour_manual(values = c("#FAAB18", "#dddddd")) +
+    theme_minimal(base_family = "NanumGothic") +
+    labs(title="호주가 장수국가",
+         subtitle = "호주와 뉴질랜드 기대수명 비교") +
+    theme(legend.position = "top") +
+    labs(x="", y="기대수명") +
+    geom_label(aes(x = 1990, y = 73, label = "호주 \n 장수국가!!!"), 
+             hjust = 0, 
+             vjust = 0.5, 
+             lineheight = 0.8,
+             colour = "#FAAB18", 
+             fill = "white", 
+             label.size = NA, 
+             family="Nanum Pen Script", 
+             size = 6) + 
+     geom_curve(aes(x = 1990, y = 73, xend = 1975, yend = 72), 
+                   colour = "#555555", 
+                   curvature = -0.3,
+                   size=0.7,
+                   arrow = arrow(length = unit(0.05, "npc")))
+```
