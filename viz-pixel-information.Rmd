@@ -220,3 +220,175 @@ oceania_df %>%
                    size=0.7,
                    arrow = arrow(length = unit(0.05, "npc")))
 ```
+
+
+## 히스토그램 강조(하이라이트) {#gghighlight-histogram}
+
+### 단변량 히스토그램 {#gghighlight-histogram-ifelse}
+
+변수를 하나 뽑아 `geom_histogram()`을 작성한다. `geom_density()`와 겹쳐 시각화를 할 수도 있고, `geom_rug()`와 결합하여 빈도가 높은 곳을 시각적으로 강조할 수도 있다. 마지막으로 
+
+```{r gghighlight-histogram}
+orig_hist_g <- faithful %>% 
+  ggplot(aes(x=eruptions)) +
+    geom_histogram()
+
+density_hist_g <- faithful %>% 
+  ggplot(aes(x=eruptions)) +
+    geom_histogram(binwidth = 0.1) +
+    geom_density(aes(y=..count.. * 0.1 ))
+
+rug_hist_g <- faithful %>% 
+  ggplot(aes(x=eruptions)) +
+    geom_histogram(binwidth = 0.1) +
+    geom_density(aes(y= 0.1 * ..count..)) +
+    geom_rug()
+
+deco_hist_g <- faithful %>% 
+  ggplot(aes(x=eruptions)) +
+    geom_histogram(binwidth = 0.1, fill="skyblue") +
+    geom_density(aes(y=0.1 * ..count..)) +
+    geom_rug(colour="red") +
+    labs(x="분출 시간(단위: 분)", y="빈도수",
+         title="유명한 간헐철(Geyser) 데이터 분출시간") +
+    theme_minimal(base_family = "NanumGothic") 
+
+cowplot::plot_grid(orig_hist_g, density_hist_g, rug_hist_g, deco_hist_g)   
+```
+
+
+### 집단 비교 {#gghighlight-histogram-group}
+
+집단간 분포 비교를 위해서 종전 히스토그램과 밀도그래프(density plot)외에 최근에 바이올린(violin) 그래프와 능선(ridge) 그래프도 많이 사용되고 있다.
+
+```{r gghighlight-histogram-group}
+library(ggridges)
+
+iris_df <- iris %>% tbl_df()
+
+hist_group_g <- iris_df %>% 
+  ggplot(aes(x=Sepal.Width, fill=Species)) +
+    geom_histogram()  +
+    labs(title="종별 히스토그램") +
+    theme(legend.position = "top")
+
+density_group_g <- iris_df %>% 
+  ggplot(aes(x=Sepal.Width, fill=Species)) +
+    geom_density(alpha=0.3) +
+    labs(title="종별 밀도그래프") +
+    theme(legend.position = "top")
+
+boxplot_group_g <- iris_df %>% 
+  ggplot(aes(y=Sepal.Width, fill=Species)) +
+    geom_boxplot(alpha=0.3)   +
+    labs(title="종별 상자그림")
+
+violin_group_g <- iris_df %>% 
+  ggplot(aes(y=Sepal.Width, x=Species)) +
+    geom_violin(color = NA,
+                fill = "lightseagreen",
+                alpha = .5,
+                na.rm = TRUE,
+                scale = "count") +
+    labs(title="종별 바이올린 그래프")
+
+violin_boxplot_group_g <- iris_df %>% 
+  ggplot(aes(y=Sepal.Width, x=Species)) +
+    geom_violin(color = NA,
+                fill = "lightseagreen",
+                alpha = .5,
+                na.rm = TRUE,
+                scale = "count") +
+    geom_boxplot(outlier.size = 2, 
+                 colour = "lightseagreen",
+                 fill = "black",
+                 na.rm = TRUE,
+                 width = .1) +
+    labs(title="종별 바이올린 + 상자그림")
+
+
+ridge_group_g <- iris_df %>% 
+  ggplot(aes(x=`Sepal.Width`, y=Species)) +
+    geom_density_ridges(scale = 1.1, 
+                        fill = "lightseagreen", 
+                        alpha=0.3)   +
+    labs(title="종별 능선그래프")
+
+raincloud_group_g <- iris_df %>% 
+  ggplot(aes(x=`Sepal.Width`, y=Species)) +
+    geom_density_ridges(jittered_points = TRUE, 
+                        position = "raincloud",
+                        scale = 0.7, 
+                        fill = "lightseagreen", 
+                        alpha=0.3)    +
+    labs(title="종별 능선 + 강우그래프")
+  
+cowplot::plot_grid(hist_group_g, density_group_g,
+                   violin_group_g, violin_boxplot_group_g,
+                   ridge_group_g, raincloud_group_g)
+```
+
+
+### 집단 비교 - 벌꿀무리 {#gghighlight-histogram-beeswarm}
+
+과거 `stripchart`를 사용해서 각 개별 관측점을 집단별로 비교하는 시각화를 많이 사용했는데 최근 `geom_beeswarm()`을 사용해서 이를 대체하고 있다.
+
+1. `geom_jitter()` + `stat_summary()`을 조합시키면 `stripchart` 기능을 `ggplot`에서 구현시킬 수 있다.
+1. 점그림(`dotplot`)은 `beeswarm` 그래프와 동일하지는 않지만 유사한 기능을 구현할 수 있다.
+1. [`ggbeeswarm`](https://github.com/eclarke/ggbeeswarm)은 관측점을 점으로 찍어 직관적으로 집단간 비교도 수월하게 시각적한다.
+
+```{r gghighlight-histogram-beeswarm}
+library(ggbeeswarm)
+
+# Stripchart
+strip_g <- iris_df %>% 
+  ggplot(aes(x = Species, y = Sepal.Width)) +
+  geom_jitter(position = position_jitter(height = 0, width = .1), 
+              fill = "lightseagreen", 
+              colour = "lightseagreen",
+              alpha = .5) + 
+  stat_summary(fun.y = median, 
+               fun.ymin = median, 
+               fun.ymax = median, 
+               geom = "crossbar", 
+               width = 0.5) +
+  coord_cartesian(ylim = c(2, 4.5)) +
+  labs(x="", y="", title="스트립차트(stripchart)")
+
+# dotplot
+dotplot_g <- iris_df %>% 
+  ggplot(aes(x = Species, y = Sepal.Width)) +
+    geom_dotplot(stackdir = "center", 
+                 binaxis = "y", 
+                 binwidth = .1,
+                 binpositions = "all",
+                 stackratio = 1.5, 
+                 fill = "lightseagreen", 
+                 colour = "lightseagreen") +
+    coord_cartesian(ylim = c(2, 4.5)) +
+    labs(x="", y="", title="점그래프(Dot plot)")
+
+# beeswarm
+beeswarm_g <- iris_df %>% 
+  ggplot(aes(x = Species, y = Sepal.Width)) +
+    geom_quasirandom(fill = "lightseagreen", 
+                     colour = "lightseagreen") +
+    coord_cartesian(ylim = c(2, 4.5)) +
+    labs(x="", y="", title="벌꿀무리 그래프")
+
+# 상자그림 + 점그림
+boxplot_dotplot_g <- iris_df %>% 
+  ggplot(aes(x = Species, y = Sepal.Width)) +
+    geom_boxplot(outlier.shape = NA) + 
+    geom_jitter(fill = "lightseagreen", 
+                colour = "lightseagreen",
+                na.rm = TRUE,
+                position = position_jitter(height = 0, width = .1),
+                alpha = .5) + 
+    coord_cartesian(ylim = c(2, 4.5)) +
+    labs(x="", y="", title="상자그림 + 점그림")
+
+cowplot::plot_grid(strip_g, dotplot_g,
+                   beeswarm_g, boxplot_dotplot_g)
+
+```
