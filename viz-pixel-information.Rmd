@@ -30,13 +30,17 @@ library(extrafont)
 loadfonts()
 ```
 
+# 참고도서 [^free-online-dataviz] {#dataviz-book}
+
+- [Claus O. Wilke, "Fundamentals of Data Visualization", O’Reilly Media, Inc.](https://serialmentor.com/dataviz/)
+
 # 데이터 픽셀 비율 [^data-to-pixel-ratio] [^bbc-style] [^bbc-rcookbook] {#data-pixel-ratio}
 
 [^data-to-pixel-ratio]: [Peter Prevos (February 24, 2019), "Strategic Data Science: Creating Value With Data Big and Small", The Lucid Manager](https://lucidmanager.org/strategic-data-science/)
 
 [^bbc-style]: [BBC - `bbplot`](https://github.com/bbc/bbplot)
 
-[]: ["BBC Visual and Data Journalism cookbook for R graphics"](https://bbc.github.io/rcookbook/)
+[^bbc-rcookbook]: ["BBC Visual and Data Journalism cookbook for R graphics"](https://bbc.github.io/rcookbook/)
 
 시각화의 중요한 원칙중의 하나는 화면 전체 픽셀(pixel)과 정보를 표현하는 픽셀 비율을 
 최대화하는 것이다. 흔히 데이터와 픽셀 비율(data to pixel ratio)로 계량화하는데 
@@ -222,7 +226,9 @@ oceania_df %>%
 ```
 
 
-## 히스토그램 강조(하이라이트) {#gghighlight-histogram}
+## 히스토그램 강조(하이라이트) [^apreshill-lecture]  {#gghighlight-histogram}
+
+[^apreshill-lecture]: [ CS631: Principles & Practice of Data Visualization (Spring 2018)](https://apreshill.github.io/data-vis-labs-2018/04-challenge.html)
 
 ### 단변량 히스토그램 {#gghighlight-histogram-ifelse}
 
@@ -390,5 +396,254 @@ boxplot_dotplot_g <- iris_df %>%
 
 cowplot::plot_grid(strip_g, dotplot_g,
                    beeswarm_g, boxplot_dotplot_g)
+```
+
+
+# 자주 사용되는 시각화 {#gghighlight-viz}
+
+## 라벨 붙은 시계열  {#gghighlight-timeseries}
+
+시계열 데이터에 마지막에 라벨을 붙이게 되면 가시성이 좋아진다.
+BLOGR 님이 작성한
+[Label line ends in time series with ggplot2](https://drsimonj.svbtle.com/label-line-ends-in-time-series-with-ggplot2) 코드를 참조하여 `ggplot`으로 코드를 작성한다.
+
+```{r best-viz-label}
+orange_ends <- Orange %>% 
+  group_by(Tree) %>% 
+  top_n(1, age) %>% 
+  pull(circumference)
+
+Orange %>% 
+  mutate(Tree = factor(Tree, levels=c(4,2,5,1,3))) %>%
+  ggplot(aes(age, circumference, color = Tree)) +
+    geom_line(size = 2, alpha = .8) +
+    theme_minimal(base_family = "NanumGothic") +
+    scale_x_continuous(expand = c(0, 0), label=scales::comma) +
+    scale_y_continuous(sec.axis = sec_axis(~ ., breaks = orange_ends)) +
+    labs(title = "오렌지 나무 성장곡선",
+        subtitle = "R 내장된 Orange 데이터셋",
+         x = "일별 경과 시간", y = "직경 (mm)", 
+         caption = "@drsimonj 원작")
+```
+
+## 막대그래프 그룹별 색상  {#gghighlight-barplot-color}
+
+TV 시리즈별 색상을 달리할 경우 `RColorBrewer` 팩키지 생상 팔레트를 범주형에 맞춰 각 시리즈별로 가장 잘 구분될 수 있도록 색상을 칠해 시각화를 한다.
+
+```{r best-viz-barbplot-color}
+ratings <- read_csv("http://bit.ly/cs631-ratings",
+                    na = c("", "NA", "N/A"))
+
+# 데이터 준비
+ratings_bonanza1 <- ratings %>% 
+  mutate(ep_id = row_number(),
+         series = as.factor(series)) %>% 
+  select(ep_id, viewers_7day, series)
+
+# 시각화
+barplot_pal <- RColorBrewer::brewer.pal(n=8, name = "Accent")
+
+ggplot(ratings_bonanza1, aes(x = ep_id, y = viewers_7day, 
+                             fill = series)) +
+  geom_col(alpha = .9) +
+  theme_minimal() +
+  ggtitle("Series 8 was a Big Setback in Viewers",
+          subtitle= "7-Day Viewers across All Series/Episodes") +
+  theme(legend.position = "bottom",
+        text = element_text(family = "Lato"),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.title.x = element_blank()) + 
+  scale_fill_manual(values = barplot_pal) +
+  scale_x_continuous(expand = c(0, 0)) +
+  guides(fill = guide_legend(nrow = 1))
+```
+
+
+## 롤리팝(lolli-pop) 그래프 [^lollipop-chart] {#gghighlight-barplot-color}
+
+[^lollipop-chart]: [UC Business Analytics R Programming Guide , "Lollipop Charts"](https://uc-r.github.io/lollipop)
+
+롤리팝(Lollipop) 그래프는 막대그래프와 클리블랜드 점그래프를 합성한 것으로 한축에는 연속형, 다른 한축에는 범주형을 두고 사용자의 관심을 점그래프로 집중시키는데 효과적이다.
+
+막대그래프 &rarr; 점그래프 &rarr; 롤리팝 그래프로 뼈대 골격을 만들어 나간다.
+
+```{r best-viz-lolli-pop}
+# 데이터 -----
+ohio_top15 <- midwest %>%
+        filter(state == "OH") %>%
+        select(county, percollege) %>%
+        top_n(15, wt=percollege) %>%
+        arrange(percollege) %>%
+        mutate(county = factor(county, levels = .$county))
+
+ohio_barplot_g <- ggplot(ohio_top15, aes(county, percollege)) +
+        geom_col() +
+        coord_flip()
+
+ohio_dotplot_g <- ggplot(ohio_top15, aes(county, percollege)) +
+        geom_point() +
+        coord_flip()
+
+ohio_lollipop_g <- ggplot(ohio_top15, aes(percollege, county)) +
+        geom_segment(aes(x = 0, y = county, 
+                         xend = percollege, yend = county), color = "grey50") +
+        geom_point()
+
+cowplot::plot_grid(ohio_barplot_g, ohio_dotplot_g, ohio_lollipop_g, nrow=1)
+```
+
+평균값에서 얼마나 차이가 있느냐를 롤리팝 그래프로 시각화하는 패턴이 많이 사용된다.
+이를 위해서, 앞서와 마찬가지로 사우이 15개 카운티를 뽑아내고 평균을 구하고 평균이상, 평균이하에 대한 요인(factor)도 함께 만들어낸다.
+
+```{r best-viz-lolli-pop-polish}
+ohio <- midwest %>%
+        filter(state == "OH") %>%
+        select(county, percollege) %>%
+        top_n(15, wt=percollege) %>%
+        arrange(percollege) %>%
+        mutate(Avg = mean(percollege, na.rm = TRUE),
+               Above = ifelse(percollege - Avg > 0, TRUE, FALSE),
+               county = factor(county, levels = .$county))
+
+comparison_lollipop_g <- ggplot(ohio, aes(percollege, county, color = Above)) +
+        geom_segment(aes(x = Avg, y = county, 
+                         xend = percollege, yend = county), color = "grey50") +
+        geom_point()
+
+ggplot(ohio, aes(percollege, county, color = Above, label=round(percollege,1))) +
+        geom_segment(aes(x = Avg, y = county, 
+                         xend = percollege, yend = county), color = "grey50") +
+        geom_point(size=7) +
+        annotate("text", x = 30, y = "WOOD", label = "평균이상", color = "#00BFC4", size = 5, hjust = -0.1, vjust = 1) +
+        annotate("text", x = 30, y = "WOOD", label = "평균이하", color = "#F8766D", size = 5, hjust = -0.1, vjust = -1) +
+        geom_text(color="black", size=3) +
+        theme_minimal(base_family = "NanumGothic") +
+        labs(x="대졸 비율(%)", y="",
+             title="오하이오주 카운티별 대졸비율 비교")  +
+        geom_segment(aes(x = 30, xend = 30 , y = "WOOD", yend = "HANCOCK"), size=1,
+                     arrow = arrow(length = unit(0.2,"cm")), color = "#00BFC4") +
+        geom_segment(aes(x = 30, xend = 30 , y = "MONTGOMERY", yend = "DELAWARE"), size=1,
+                     arrow = arrow(length = unit(0.2,"cm")), color = "#F8766D") +
+        theme(legend.position = "none")
+
+```
+
+## 추세선 강조 + 라벨 {#gghighlight-trend-line-label}
+
+`geom_line()`을 두개 포함시켜 강조하고하는 색상을 별도로 지정하고 선굵기도 달리한다.
+라벨도 동일한 방법으로 `geom_text()`를 두개 포함시켜 강조하고자하는 색상과 글꼴크기도 달리 지정한다.
+
+```{r best-viz-trend-line}
+ratings %>% 
+  mutate(episode = as.factor(episode)) %>% 
+  ggplot(aes(x = episode, y = viewers_7day, group = series)) +
+    geom_line(data = filter(ratings, !series == 8), alpha = .25) +
+    geom_line(data = filter(ratings, series == 8), color = "#CF2154", size=1) +
+    theme_minimal(base_family = "NanumGothic") + 
+    labs(x = "에피소드", y="1주일 시청자수", title="여덟번째 스리즈가 문제네!!!") +
+    geom_text(data = filter(ratings, episode == 1 & series %in% c(1:7)), color = "gray",
+              aes(label = paste0(series, " 회차 ")), vjust = -1, family = "NanumGothic") +
+    geom_text(data = filter(ratings, episode == 10 & series == 8), color = "#CF2154",
+              aes(label = paste0(series, " 회차 ")), vjust = -1, family = "Nanum Pen Script")
+
+```
+
+
+## 아령(dumbbell) 그래프 {#gghighlight-dumbbel-plot}
+
+TV 시리즈별로 회차를 달리하여 첫번째와 가장 마지막 시청자수를 비교하여 시각화하는데 아령(dumbbell) 그래프가 효과적이다. 이를 위해서 `ggplot()`에 들어가는 자료형을 미리 준비하고 이에 맞춰 `geom_line()`과 `geom_point()`를 결합시켜 시각화한다.
+
+```{r best-viz-dumbbell-plot}
+ratings_dumbbell_df <- ratings %>% 
+  select(series, episode, viewers_7day) %>% 
+  group_by(series) %>% 
+  filter(episode == 1 | episode == max(episode)) %>% 
+  mutate(episode = ifelse(episode == 1,"1회차", "최종회")) %>% 
+  ungroup() %>% 
+  mutate(series = as.factor(series))
+
+ratings_dumbbell_df
+
+# RColorBrewer::display.brewer.all()
+dumbbell_pal <- RColorBrewer::brewer.pal(n=3, name="Set1")
+
+ratings_dumbbell_df %>% 
+  ggplot(aes(x = viewers_7day, y = fct_rev(series), color = episode, group = series)) +
+    geom_line(size = .75) +
+    geom_point(size = 2.5) +
+    theme_minimal() +
+    scale_color_manual(values = dumbbell_pal) +
+    labs(title = "아령 그래프 사례", y = "회차", x = "시청자수 (백만명)",
+         color = "회차") +
+    theme(text = element_text(family = "NanumGothic"),
+          legend.position = "top")
+```
+
+
+## 경사(Slope) 그래프 [^create-slopegraphs-in-r] {#gghighlight-slope-plot}
+
+[^create-slopegraphs-in-r]: [Chuck Powell (2018-06-22),  "Visualizing Data
+in R - Creating Slopegraphs with R"](https://datascienceplus.com/creating-slopegraphs-with-r/)
+
+[`터프티(tufte)` 스타일 경사그래프](https://www.edwardtufte.com/bboard/q-and-a-fetch-msg?msg_id=0003nk)를 `ggplot`과 `dplyr`을 조합시켜 구현한다. 이를 위해서 먼저 `ggplot`의 기본기능을 활용하여 경사그래프를 시각화한다.
+
+```{r best-viz-slope-plot-base}
+ratings_dumbbell_df %>% 
+  ggplot(aes(x = episode, y = viewers_7day, group = series)) +
+    geom_point(data = filter(ratings_dumbbell_df, !series == 8), alpha = .25) +
+    geom_point(data = filter(ratings_dumbbell_df, series == 8), color = "#CF2154") +
+    geom_line(data = filter(ratings_dumbbell_df, !series == 8), alpha = .25) +
+    geom_line(data = filter(ratings_dumbbell_df, series == 8),color = "#CF2154") +
+    theme_minimal(base_family = "NanumGothic") +
+    labs(title = "경사그래프(Slopegraph) 사례", x="에피소드", y="주별 시청자수 (단위: 백만)") +
+    geom_text(data = filter(ratings_dumbbell_df, episode == "최종회" & series %in% c(1:7)), color = "gray",
+              aes(label = series), vjust = -1, family = "Nanum Pen Script", hjust = .5) +
+    geom_text(data = filter(ratings_dumbbell_df, episode == "최종회" & series == 8), color = "#CF2154",
+              aes(label = paste0(series, " 회차")), vjust = -1, family = "Nanum Pen Script", size=5)
+```
+
+[`slopegraph`](https://github.com/leeper/slopegraph) 팩키지로 대동단결하는 분위기다. 이를 바탕으로 경사그래프를 시각해보자.
+
+
+```{r best-viz-slope-plot-slopegraph}
+# devtools::install_github("leeper/slopegraph")
+library(slopegraph)
+
+data(cancer)
+cancer %>% head
+
+slopegraph(cancer, col.lines = 'gray', col.lab = "black", 
+           xlim = c(-.5, 5.5), cex.lab = 0.5, cex.num = 0.5,
+           xlabels = c('5 Year','10 Year','15 Year','20 Year'))
+```
+
+`slopegraph`는 Base 그래픽을 기본으로 제공한다. 자료구조도 `rownames`를 갖는 전통적인 데이터프레임이다.
+기본 Base 그래픽을 염두에 두고 상기 TV 연속물 경사그래프를 다음과 같이 작성할 수 있다.
+
+```{r best-viz-slope-plot-slopegraph-series}
+series_cols <- c(rep("darkgray", 7), "red")
+
+ratings_dumbbell_df %>% 
+  spread(episode, viewers_7day) %>% 
+  as.data.frame() %>% 
+  column_to_rownames(var="series") %>% 
+  slopegraph(., col.lines = series_cols, col.lab = series_cols, 
+            cex.lab = 1.5, cex.num = 1.0,
+            xlim = c(-0.5, 3.5), 
+            xlabels = c('첫회','최종회'))
+```
+
+`slopegraph()` 함수 대신 `ggslopegraph()` 함수를 사용하게 되면 `ggplot()`으로도 시각화를 할 수 있다.
+
+```{r best-viz-slope-plot-ggslopegraph-series}
+ratings_dumbbell_df %>% 
+  spread(episode, viewers_7day) %>% 
+  as.data.frame() %>% 
+  column_to_rownames(var="series") %>% 
+  ggslopegraph(offset.x = 0.06, yrev = FALSE,
+               col.lines = series_cols, col.lab = series_cols,
+               main="경사그래프 사례 - ggplot") +
+     theme_minimal(base_family = "NanumGothic")
 
 ```
