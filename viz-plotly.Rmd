@@ -1,0 +1,316 @@
+---
+layout: page
+title: "데이터 시각화 - 인터랙티브"
+subtitle: "`plotly` + `ggplot2`"
+author:
+    name: xwMOOC
+    url: https://www.facebook.com/groups/tidyverse/
+    affiliation: Tidyverse Korea
+date: "`r Sys.Date()`"
+output:
+  html_document: 
+    toc: yes
+    toc_float: true
+    highlight: tango
+    code_folding: show
+    number_section: true
+    self_contained: true
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE,
+                    comment="", digits = 3, tidy = FALSE, prompt = FALSE, fig.align = 'center')
+
+```
+
+
+# `plotly` {#rbokeh-plotly}
+
+[plotly.js](https://github.com/plotly/plotly.js)는 `plot.ly`와 `Dash`를 배경에 두고
+개발된 오픈소스 자바스크립트 라이브러리로 R로 가져온 인터랙티브 시각화 팩키지는 
+[plotly](https://plot.ly/)는 웹페이지 [Plotly R Open Source Graphing Library](https://plot.ly/r/)에서 
+다양한 예제를 만나볼 수 있고, [Plotly ggplot2 Library](https://plot.ly/ggplot2/)를 통해서 
+영감을 얻을 수 있다. [An interactive graphing library for R](https://github.com/ropensci/plotly)를 
+공식적인 GitHub 개발 사이트로 알려져 있다.
+
+# 헬로 월드 {#rbokeh-ggplot-hello-world}
+
+`rbokeh` 인터랙티브 데이터 시각화 팩키지와 비교하여 `plotly`의 장점은 `ggplot2`와 연계가 된다는 점이 강점이다.
+즉, `plotly`를 통해서 정적 `ggplot2` 시각화 산출물을 명령어 하나로 인터랙티브 시각화 산출물로 수월하게 탈바꿈시킬 수 있다.
+
+즉, 정적 `ggplot` 그래프 객체를 생성시킨 후에 `ggplotly()` 함수에 던지게 되면 나름 유용한 인터랙티브 시각화 그래프 산출물이 생성된다.
+
+```{r plotly-hello-world}
+library(tidyverse)
+library(plotly)
+library(gapminder)
+
+## `ggplot` 정적 그래프
+hello_world_g <- gapminder %>% 
+  filter(year == max(year)) %>% 
+  ggplot(aes(x=gdpPercap, y=lifeExp, color=continent)) +
+    geom_point() 
+
+hello_world_g
+
+## `plotyly` 인터랙티브 그래프
+ggplotly(hello_world_g)
+```
+
+# 단변량 인터랙티브 시각화 {#rbokeh-plotly-univariate}
+
+## 막대그래프 {#rbokeh-plotly-univariate-barplot}
+
+각 대륙별로 속한 국가수를 가장 최근 연도를 기준으로 살펴보자.
+이를 위해서 먼저 가장 최근 조사연도를 추출하고 각 대륙별로 국가수를 계수한다.
+그리고 나서 `plot_ly()` 함수에 던지는데 변수를 식별하는데 `~`를 사용하는 것이 `plotly` 팩키지를 사용할 때 다른 `rbokeh` 혹은 `ggplot2`와 차이가 난다. `ggplot2` 문법과 마찬가지로 `geom_col()`와 유사하게 `add_bars()`를 사용해서 막대그래프를 완성하게 된다.
+
+```{r plotly-univariate-barplot}
+gapminder %>% 
+  filter(year == max(year)) %>% 
+  count(continent) %>% 
+  mutate(continent = fct_reorder(continent, n, .desc=TRUE)) %>% 
+  plot_ly(x = ~continent, y = ~n) %>% 
+    add_bars()
+```
+
+
+## 히스토그램 {#rbokeh-plotly-univariate-histogram}
+
+기대수명(`lifeExp`)은 돈(`gdpPercap`)보다 소중하기 때문에 가장 최근연도 기대수명 산포를 `add_histogram()` 함수를 통해서 시각화한다. 최대 `bin` 갯수를 `nbinsx=`로 설정하여 히스토그램을 제작할 수 있다.
+
+```{r plotly-univariate-histogram}
+gapminder %>% 
+  filter(year == max(year)) %>% 
+  plot_ly(x = ~lifeExp) %>% 
+    add_histogram(nbinsx = 30)
+```
+
+혹은 `xbins=`를 통해 구간을 설정하여 35세를 기준으로 5세 간격으로 히스토그램 생성도 가능하다.
+
+```{r plotly-univariate-histogram-bins}
+gapminder %>% 
+  filter(year == max(year)) %>% 
+  plot_ly(x = ~lifeExp) %>% 
+    add_histogram(xbins = list(start = 35, end = 85, size = 5))
+```
+
+## 밀도(density) 그래프 {#plotly-viz-interactive-density}
+
+밀도는 선으로 표현되기 때문에 `add_lines()`를 사용한다.
+각 대륙별로 데이터프레임을 생성시키고, 밀도를 `density()`로 추정한다.
+그리고 나서 `plot_ly()`에 기대수명 밀도에 색상을 부여한다.
+
+```{r plotly-interactive-density}
+gapminder_df <- gapminder %>% 
+  filter(year == max(year))
+
+## 대륙별 데이터프레임 -----
+africa_df <- gapminder_df %>% filter(continent == "Africa")
+asia_df   <- gapminder_df %>% filter(continent == "Asia")
+europe_df <- gapminder_df %>% filter(continent == "Europe")
+
+## 밀도 추정 -----
+africa_den <- density(africa_df$lifeExp)
+asia_den   <- density(asia_df$lifeExp)
+europe_den <- density(europe_df$lifeExp)
+
+## 시각화 -----
+plot_ly(opacity = 1) %>% 
+    add_lines(x = ~africa_den$x, y = ~africa_den$y, name = "아프리카") %>% 
+    add_lines(x = ~asia_den$x, y = ~asia_den$y, name = "아시아") %>% 
+    add_lines(x = ~europe_den$x, y = ~europe_den$y, name = "유럽") %>% 
+    layout(xaxis = list(title = '기대수명'),
+           yaxis = list(title = '밀도'))
+```
+
+
+# 이변량 인터랙티브 시각화 {#rbokeh-plotly-bivariate}
+
+## 산점도 {#rbokeh-plotly-scatterplot}
+
+`x` 변수도 연속형이고, `y` 변수도 연속형인 경우 인터랙티브 산점도를 `add_markers()` 함수로 구현한다.
+
+```{r plotly-bivariate-scatterplot}
+gapminder %>% 
+  filter(year == max(year)) %>% 
+  plot_ly(x = ~gdpPercap, y = ~lifeExp) %>% 
+    add_markers()
+```
+
+## 그룹 막대그래프 {#rbokeh-plotly-group-barplot}
+
+`add_bars()` 막대그래프는 기본디폴트 설정으로 `barmode = "dodge"`로 되어 있어 이를 쌓고자 하는 경우 
+`layout(barmode = "stack")`으로 추가 설정을 한다.
+
+```{r plotly-bivariate-group-barplot}
+gapminder %>% 
+  count(year, continent) %>% 
+  plot_ly(x = ~year, y = ~n, color = ~continent) %>% 
+    add_bars() %>% 
+    layout(barmode = "stack")
+```
+
+비율로 변환시킬 경우 비율을 구한 후에 계산된 비율을 `plot_ly()`에 전달한다. 
+
+```{r plotly-bivariate-group-barplot-proportin}
+gapminder %>% 
+  count(year, continent) %>% 
+  group_by(year) %>% 
+  mutate(`비율` = n / sum(n)) %>% 
+  plot_ly(x = ~year, y = ~`비율`, color = ~continent) %>% 
+    add_bars() %>% 
+    layout(barmode = "stack")
+```
+
+
+## 상자그림(boxplot) {#rbokeh-plotly-group-boxplot}
+
+`add_boxplot()` 함수를 사용하게 되면 대륙별로 상자그림을 통해 기대수명 분포를 한눈에 파악할 수 있다.
+
+```{r plotly-bivariate-group-boxplot}
+gapminder %>% 
+  filter(year == max(year)) %>% 
+  plot_ly(x = ~continent, y = ~lifeExp, color = ~continent) %>% 
+    add_boxplot()
+```
+
+
+# 시각화 산출물 꾸미기 {#plotly-viz-aes}
+
+`rbokeh`와 마찬가지로 `plotly`도 색상(`color`), 투명도(`opacity`), 모양(`symbol`), 크기(`size`), 폭(`width`) 등을 지정할 수 있다.
+
+투명도(`opacity =`), 모양(`symbol =`), 크기(`size =`)를 지정할 수 있다.
+
+```{r plotly-bivariate-aes}
+gapminder %>% 
+  filter(year == max(year)) %>% 
+  plot_ly(x = ~gdpPercap, y = ~lifeExp, color = ~continent) %>% 
+    add_markers(marker = list(opacity = 0.5, symbol = "square", size=20))
+```
+
+`RColorBrewer` 팩키지가 내장되되어 있어 `add_markers()` 함수의 `colors =`인자에 팔레트를 사용하는 것도 가능하고 색상을 각 범주별로 지정하는 것도 가능하다.
+
+```{r plotly-bivariate-aes-color}
+gapminder %>% 
+  filter(year == max(year)) %>% 
+  plot_ly(x = ~gdpPercap, y = ~lifeExp, color = ~continent) %>% 
+    add_markers(colors = "Dark2")
+```
+
+`layout()` 함수에 `title=`을 통해 그래프 제목을 달 수도 있고 `xaxis =`, `yaxis =`에 축라벨을 붙이는 것도 가능하다. `showgrid=FALSE`를 통해 참조선도 보여주거나 감출 수 있다.
+
+```{r plotly-bivariate-aes-color-label}
+gapminder %>% 
+  filter(year == max(year)) %>% 
+  plot_ly(x = ~gdpPercap, y = ~lifeExp, color = ~continent) %>% 
+  add_markers(colors = c("orange", "darkgray", "skyblue", "black", "red")) %>% 
+  layout(title = '1인당 GDP와 기대수명 관계',
+       xaxis = list(title = '1인당 GDP',
+                    zeroline = TRUE,
+                    range = c(0, 50000)),
+       yaxis = list(title = '기대수명',
+                    range = c(0,85),
+                    showgrid = FALSE))
+```
+
+
+# 인터랙티브 시각화 {#plotly-viz-interactive}
+
+## `tooltip` {#plotly-viz-interactive}
+
+`hoverinfo = "text"`를 사용해서 `text`에 마우스로 점 주변을 선회(`hover`)시킬 때 표식에 제공할 내용을 정리한다.
+
+```{r plotly-interactive}
+gapminder %>% 
+  filter(year == max(year)) %>% 
+  plot_ly(x = ~gdpPercap, y = ~lifeExp, color = ~continent, hoverinfo = "text",
+          text = ~paste0("<b>", "Gapminder", "</b> <br>",
+                         "인당 GDP: ", gdpPercap, "<br>",
+                         "기대수명: ", lifeExp)) %>% 
+  add_markers(colors = c("orange", "darkgray", "skyblue", "black", "red")) %>% 
+  layout(title = '1인당 GDP와 기대수명 관계',
+       xaxis = list(title = '1인당 GDP',
+                    zeroline = TRUE,
+                    range = c(0, 50000)),
+       yaxis = list(title = '기대수명',
+                    range = c(0,85)))
+```
+
+
+## 회귀선 {#plotly-viz-interactive-regline}
+
+회귀선을 비롯한 모형 적합선을 `add_lines()` 명령어를 통해서 추가할 수 있다.
+`showlegend = FALSE`를 통해 모형적합선에 대한 범례를 추가시킬 수 있다.
+
+```{r plotly-interactive-regline}
+gap_loess <- loess(lifeExp ~ gdpPercap, data = gapminder_df)
+gap_lm    <- lm(lifeExp ~ gdpPercap, data = gapminder_df)
+
+gapminder_df %>% 
+  plot_ly(x = ~gdpPercap, y = ~lifeExp, hoverinfo = "text",
+          text = ~paste0("<b>", "Gapminder", "</b> <br>",
+                         "인당 GDP: ", gdpPercap, "<br>",
+                         "기대수명: ", lifeExp)) %>% 
+  add_markers(colors = c("orange", "darkgray", "skyblue", "black", "red"), showlegend = FALSE) %>% 
+  add_lines(y = ~fitted(gap_lm), name = "회귀선") %>% 
+  add_lines(y = ~fitted(gap_loess), name = "LOESS")
+  # layout(showlegend = FALSE)
+```
+
+
+# 다수 그래프 {#plotly-viz-multiple}
+
+## `subplot`으로 병합 {#plotly-viz-multiple-subplot}
+
+`subplot()` 함수로 서로 다른 형태 `plotly` 객체를 하나로 모아 작성할 수 있다.
+
+```{r plotly-interactive-subplot}
+asia_plotly <- gapminder_df %>% 
+  filter(continent == "Asia") %>% 
+  plot_ly(x = ~gdpPercap, y = ~lifeExp, hoverinfo = "text",
+          text = ~paste0("<b>", "Gapminder", "</b> <br>",
+                         "인당 GDP: ", gdpPercap, "<br>",
+                         "기대수명: ", lifeExp)) %>% 
+    add_markers(name = ~continent) %>% 
+    layout(title = '아시아 인당 GDP와 기대수명',
+       xaxis = list(title = '1인당 GDP'),
+       yaxis = list(title = '기대수명'))
+
+africa_plotly <- gapminder_df %>% 
+  filter(continent == "Africa") %>% 
+  plot_ly(x = ~gdpPercap, y = ~lifeExp, hoverinfo = "text",
+          text = ~paste0("<b>", "Gapminder", "</b> <br>",
+                         "인당 GDP: ", gdpPercap, "<br>",
+                         "기대수명: ", lifeExp)) %>% 
+    add_markers(name = ~continent) %>% 
+    layout(title = '아프리카 인당 GDP와 기대수명',
+       xaxis = list(title = '1인당 GDP'),
+       yaxis = list(title = '기대수명'))
+
+subplot(asia_plotly, africa_plotly, nrows = 1, shareY = TRUE, shareX = TRUE)
+```
+
+## `group_by()` + `do()` 조합 {#plotly-viz-multiple-group_by-do}
+
+`group_by()`가 `split()` 함수와 유사한 기능을 제공하여 각 대륙별로 데이터프레임을 쪼개고 `do()` 명령어가 `lapply()` 함수와 동일하게 시각화를 각 대륙별 작업을 담당하게 되고 이를 `subplot()` 함수로 최종 조합하여 시각화 결과물을 산출시키게 된다.
+
+```{r plotly-interactive-group_by-do}
+gapminder_df %>%
+  group_by(continent) %>%
+  do(plot = plot_ly(data =., x = ~gdpPercap, y = ~lifeExp, hoverinfo = "text",
+                    text = ~paste0("<b>", "Gapminder", "</b> <br>",
+                                   "인당 GDP: ", gdpPercap, "<br>",
+                                   "기대수명: ", lifeExp)) %>% 
+    add_markers(name = ~continent) %>% 
+    layout(title = '인당 GDP와 기대수명',
+       xaxis = list(title = '1인당 GDP'),
+       yaxis = list(title = '기대수명'))
+  ) %>%
+  subplot(nrows = 2)
+```
+
+

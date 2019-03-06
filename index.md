@@ -44,8 +44,9 @@ title: 데이터 과학 -- 시각화
     - [북한 미사일 발사 분석](viz-nk-missile-overview.html)
     - [무역보복 - UN Comtrade API](viz-trade-retaliation.html)
     - **`rbokeh` vs `plotly`**
-        - [`rbokeh`](viz-rbokeh.html)
-        - [국회의원 사진 - trelliscope](viz-congressman.html)
+        - [`rbokeh` + `trelliscope`](viz-rbokeh.html)
+        - [`plotly` + `ggplot2`](viz-plotly.html)
+        - [국회의원 사진 - trelliscope](viz-congressman.html)        
 - **시각화 실무**
     - [세계보건기구(WHO) - 전문시각화](viz_who.html)
     - [가구당 가계수지 - 10 분위별](viz-household-balance-deciles.html)
