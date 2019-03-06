@@ -43,9 +43,9 @@ title: 데이터 과학 -- 시각화
     - [북한 미사일 발사 연대기](viz-nk-missile.html)
     - [북한 미사일 발사 분석](viz-nk-missile-overview.html)
     - [무역보복 - UN Comtrade API](viz-trade-retaliation.html)
-- **시각화 제품**
-    - [국회의원 사진 - trelliscope](viz-congressman.html)
-    - [저출산과 소요예산 - 상관관계](viz-low-birth-rate.html)
+    - **`rbokeh` vs `plotly`**
+        - [`rbokeh`](viz-rbokeh.html)
+        - [국회의원 사진 - trelliscope](viz-congressman.html)
 - **시각화 실무**
     - [세계보건기구(WHO) - 전문시각화](viz_who.html)
     - [가구당 가계수지 - 10 분위별](viz-household-balance-deciles.html)
@@ -54,6 +54,7 @@ title: 데이터 과학 -- 시각화
         - [대한민국 인구변화(2000 vs 2015) - treemap](viz-pop-treemap.html)
         - [지역내총생산 (GRDP) - treemap](viz-grdp-treemap.html)    
     - [유통소매점 - 인터랙티브 heatmap](viz-retail-heatmap.html)
+    - [저출산과 소요예산 - 상관관계](viz-low-birth-rate.html)    
 
 ### [xwMOOC 오픈 교재](https://statkclee.github.io/xwMOOC/)
 

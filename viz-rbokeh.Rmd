@@ -1,0 +1,388 @@
+---
+layout: page
+title: "데이터 시각화 - 인터랙티브"
+subtitle: "`rbokeh`"
+author:
+    name: xwMOOC
+    url: https://www.facebook.com/groups/tidyverse/
+    affiliation: Tidyverse Korea
+date: "`r Sys.Date()`"
+output:
+  html_document: 
+    toc: yes
+    toc_float: true
+    highlight: tango
+    code_folding: show
+    number_section: true
+    self_contained: true
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE,
+                    comment="", digits = 3, tidy = FALSE, prompt = FALSE, fig.align = 'center')
+
+```
+
+
+# `rbokeh` {#rbokeh-ggplot}
+
+[rbokeh](https://github.com/bokeh/rbokeh)는 [bokeh](https://bokeh.pydata.org/en/latest/)를 R로 가져온 랩퍼로 
+웹브라우저에서 인터랙티브 시각화를 목표로 개발되었다. 문법은 `ggplot`과 대단히 유사하다.
+`ggplot()`이 `+` 연산자로 하나 하나 쌓아가는 구문을 구사하는 반면,
+`rbokeh`는 `figure()`에 `%>%` 구문기호를 사용하는 차이가 있다.
+
+<div class = "row">
+  <div class = "col-md-6">
+**`ggplot`**
+
+``` {r rbokeh-ggplot, eval=FALSE}
+ggplot() +
+   ... +
+   ... +
+   ...
+```
+
+  </div>
+  <div class = "col-md-6">
+**`rbokeh`**
+
+``` {r rbokeh-rbokeh, eval=FALSE}
+figure() %>%
+    ... %>%
+    ... %>%
+    ...
+```
+
+  </div>
+</div>
+
+
+# 헬로 월드 {#rbokeh-ggplot-hello-world}
+
+`rbokeh` 인터랙티브 데이터 시각화를 위해서 먼저 `gapminder` 팩키지 데이터를 사용하고 국가가 너무 많은 관계로 우선 "Korea, Rep." 대한민국 연도별 기대수명을 시각화해본다. 
+`ggplot()` 대신 `figure()`를 사용하고 시계열 데이터라서 `ly_lines()` 함수로 연도(`year`)와 기대수명(`lifeExp`)을 `x`축, `y`축에 두고 시각화한다.
+
+
+```{r rbokeh-hello-world}
+library(tidyverse)
+library(gapminder)
+library(rbokeh)
+
+gapminder %>% 
+  filter(str_detect(country, "Korea, Rep.")) %>% 
+  figure() %>%
+  ly_lines(x = year, y = lifeExp)
+```
+
+
+# 다양한 시각화 산출물 {#rbokeh-ggplot-viz}
+
+`rbokeh` 계층(layer)는 `ly_lines()` 외에도 다양하다.
+
+- `ly_abline()`
+- `ly_annular_wedge()`
+- `ly_annulus()`
+- `ly_arc()`
+- `ly_bezier()`
+- `ly_boxplot()`
+- `ly_contour()`
+- `ly_crect()`
+- `ly_curve()`
+- `ly_density()`
+- `ly_hist()`
+- `ly_image_url()`
+- `ly_image()`
+- `ly_lines()`
+- `ly_map()`
+- `ly_multi_line()`
+- `ly_oval()`
+- `ly_patch()`
+- `ly_points()`
+- `ly_polygons()`
+- `ly_quadratic()`
+- `ly_quantile()`
+- `ly_ray()`
+- `ly_segments()`
+- `ly_text()`
+- `ly_wedge()`
+
+## 산점도(`ly_points`) {#rbokeh-ggplot-viz-scatter}
+
+`gapminder` 데이터셋에서 가장 최근 연도를 추출하여 일인당GDP(`gdpPercap`)와 기대수명(`lifeExp`)을 산점도로 작성한다.
+
+
+```{r rbokeh-scatter-plot}
+gapminder %>% 
+  filter(year == max(year)) %>% 
+  figure() %>% 
+    ly_points(x=gdpPercap, y=lifeExp)
+```
+
+
+## 선그래프 {#rbokeh-ggplot-viz-line}
+
+시계열 데이터도 많이 시각화하는 사례중 하나다. 이를 위해서 대한민국과 북한을 국가명(`country`)에서 추출하여 `ly_lines()` 함수로 시계열 선을 `ly_points()` 함수로 시계열 점을 각각 도식화하고 두 국가를 구분하기 위해서 범례 위치를 보기 좋은 곳에 저정한다.
+
+
+```{r rbokeh-line-plot}
+gapminder %>% 
+  filter(str_detect(country, "Korea")) %>% 
+  figure(legend_location = "top_left") %>% 
+    ly_lines(x=year, y=lifeExp, color=country) %>% 
+    ly_points(x=year, y=lifeExp, color=country)
+
+```
+
+## 히스토그램 {#rbokeh-ggplot-viz-histogram}
+
+`ly_hist()` 함수를 사용해서 아프리카와 유럽 국가의 기대수명 분포를 히스토그램으로 시각화하는 것이 가능하다.
+
+```{r rbokeh-histogram}
+gapminder %>% 
+  filter(continent %in% c("Africa")) %>% 
+  filter(year == max(year)) %>% 
+  figure() %>% 
+    ly_hist(x=lifeExp, fill_alpha=0.1, color="red")
+
+gapminder %>% 
+  filter(continent %in% c("Europe")) %>% 
+  filter(year == max(year)) %>% 
+  figure() %>% 
+    ly_hist(x=lifeExp, fill_alpha=0.1)
+```
+
+
+## 회귀직선 {#rbokeh-ggplot-viz-regline}
+
+`ly_abline()` 함수를 사용하면 회귀직선도 함께 추가시킬 수 있다.
+
+```{r rbokeh-line-plot-abline}
+## 대한민국 데이터 추출
+korea_df <- gapminder %>% 
+  filter(str_detect(country, "Korea. Rep."))
+
+## 회귀선 적합
+korea_reg <- lm(lifeExp ~year, data = korea_df)  
+
+## 시각화 
+korea_df %>% 
+  figure(legend_location = "top_left",
+         title="대한민국 기대수명 회귀선",
+         xlab="연도", ylab="기대수명",
+         color="국가명") %>% 
+    ly_lines(x=year, y=lifeExp) %>% 
+    ly_points(x=year, y=lifeExp, fill_alpha=1) %>% 
+    set_palette(discrete_color = pal_color(c("blue"))) %>% 
+  ly_abline(korea_reg)
+```
+
+
+# 시각화 산출물 꾸미기 {#rbokeh-ggplot-viz-aes}
+
+데이터프레임을 입력받아 적절한 형태로 시각화를 했다면, 커뮤니케이션을 위해서 시각화 산출물에 대한 꾸미기 작업을 수행한다. 위치와 더불어 색상, 크기, 투명도, 선유형, 모양은 명시적인 시각화 커뮤니케이션을 돕는 역할을 수행한다.
+
+- 색상(color)
+- 크기(size)
+- 투명도(transaprency) 혹은 알파(alpha)
+- 선유형(line type)
+- 모양(shape)
+
+`figure()` 내부에 그래프를 설명하는 제목(`title`) 을 넣고, `xlab`, `ylab`을 통해 축 설명도 붙인다.
+투명도를 `fill_alpha`로 지정하여 가시성을 높인다. `set_palette`를 사용해서 색상도 사용자 정의가 가능하다.
+
+- 그래프 제목: `title=`
+- 그래프 크기: `size=`
+- 축라벨: `xlab=` , `ylab=`
+- 축범위: `xlim=`, `ylim=`
+- 축 테마: `theme=`
+- 축 그리드: `xgrid=TRUE/FALSE`, `ygrid=TRUE/FALSE`
+
+`theme_axis("x", major_label_orientation = 90)` 기능은 `x`축 라벨값을 90도로 회전시켜 가독성을 높이는 경우 유용하게 사용될 수 있다.
+
+```{r rbokeh-line-plot-aes}
+gapminder %>% 
+  filter(str_detect(country, "Korea")) %>% 
+  figure(legend_location = "top_left",
+         title="남과 북 기대수명 추세 비교",
+         xlab="연도", ylab="기대수명",
+         color="국가명",
+         theme = bk_ggplot_theme(),
+         xgrid = FALSE, ygrid = TRUE) %>% 
+    ly_lines(x=year, y=lifeExp, color=country) %>% 
+    ly_points(x=year, y=lifeExp, color=country, fill_alpha=1) %>% 
+    set_palette(discrete_color = pal_color(c("red", "blue"))) %>% 
+    theme_axis("x", major_label_orientation = 90)
+```
+
+
+# 인터랙티브 시각화 {#rbokeh-ggplot-viz-interactive}
+
+`ly_point()` 함수에 `hover=` 인자를 추가하게 되면 각점 위에 마우스 포인터를 가져다 놓으면 해당 점에 대한 상세 정보가 자동으로 팝업되어 나타난다.
+
+```{r rbokeh-line-plot-interactive}
+gapminder %>% 
+  filter(str_detect(country, "Korea")) %>% 
+  figure(legend_location = "top_left",
+         title="남과 북 기대수명 추세 비교",
+         xlab="연도", ylab="기대수명",
+         color="국가명") %>% 
+    ly_lines(x=year, y=lifeExp, color=country) %>% 
+    ly_points(x=year, y=lifeExp, color=country, fill_alpha=1,
+              hover = c(country, year, lifeExp),
+              size=5) %>% 
+    set_palette(discrete_color = pal_color(c("red", "blue")))
+```
+
+## 사용자 정의 사항 반영 {#rbokeh-ggplot-viz-interactive-custom}
+
+HTML을 사용하여 `<br>` 줄바꿈, `<b></b>` 굵은 글씨, `&middot;` 혹은 `&bull;`을 사용하여 중간점도 찍을 수 있다.
+
+```{r rbokeh-line-plot-interactive-custom}
+gapminder %>% 
+  filter(str_detect(country, "Korea")) %>% 
+  figure(legend_location = "top_left",
+         title="남과 북 기대수명 추세 비교",
+         xlab="연도", ylab="기대수명",
+         color="국가명",
+         toolbar_location = "above") %>% 
+    ly_lines(x=year, y=lifeExp, color=country) %>% 
+    ly_points(x=year, y=lifeExp, color=country, fill_alpha=1,
+              hover = "<b>데이터 사이언스</b> <br>
+                       &middot; 국가명: @country <br>
+                       &bull; 연도: @year <br>
+                       &middot; 기대수명: @lifeExp",
+              size=5) %>% 
+    set_palette(discrete_color = pal_color(c("red", "blue")))
+```
+
+
+# 내보내기... 저장하기 {#rbokeh-export-save}
+
+`rbokeh`로 저장시킨 객체를 `rbokeh2html()` 함수를 사용해서  `HTML` 파일로 저장시킬 수 있다.
+또한, `widget2png()` 함수로 PNG 파일 저장도 가능하다.
+
+```{r rbokeh-export}
+gapminder_bokeh <- gapminder %>% 
+  filter(str_detect(country, "Korea")) %>% 
+  figure(legend_location = "top_left",
+         title="남과 북 기대수명 추세 비교",
+         xlab="연도", ylab="기대수명",
+         color="국가명",
+         toolbar_location = "above") %>% 
+    ly_lines(x=year, y=lifeExp, color=country) %>% 
+    ly_points(x=year, y=lifeExp, color=country, fill_alpha=1,
+              hover = "<b>데이터 사이언스</b> <br>
+                       &middot; 국가명: @country <br>
+                       &bull; 연도: @year <br>
+                       &middot; 기대수명: @lifeExp",
+              size=5) %>% 
+    set_palette(discrete_color = pal_color(c("red", "blue")))
+
+## HTML 저장 
+rbokeh2html(fig = gapminder_bokeh, file = "data/gapminder_bokeh.html")
+
+## HTML R에서 열기
+# browseURL("data/gapminder_bokeh.html")
+```
+
+
+# `grid_plot`과 `facet` 시각화 {#rbokeh-ggplot-viz-grid_plot}
+
+## `grid_plot` 이질적인 그래프 조합 {#rbokeh-ggplot-viz-grid_plot-run}
+
+서로 다른 유형의 `rbokeh` 그래프를 모아 한곳에서 볼 수 있는 것은 의미가 크다. 이를 위해서 `grid_plot` 함수를 사용해서 서로 다른 유형의 `rbokeh` 그래프를 모아 시각화한다.
+`same_axes =`를 설정하여 동일 축에 그래프간에 비교가 가능하게 하고, 
+`width =`, `height =`를 지정하여 그래프 전체 크기도 조정한다.
+
+```{r rbokeh-line-plot-interactive-grid-plot}
+korea_bokeh <- gapminder %>% 
+  filter(str_detect(country, "Korea")) %>% 
+  figure(legend_location = "top_left",
+         title="남과 북 기대수명 추세 비교",
+         xlab="연도", ylab="기대수명",
+         color="국가명") %>% 
+    ly_lines(x=year, y=lifeExp, color=country) %>% 
+    ly_points(x=year, y=lifeExp, color=country, fill_alpha=1,
+              hover = c(country, year, lifeExp),
+              size=5) %>% 
+    set_palette(discrete_color = pal_color(c("red", "blue")))
+
+oceania_bokeh <- gapminder %>% 
+  filter(str_detect(continent, "Oceania")) %>% 
+  figure(legend_location = "top_left",
+         title="오세아니아 기대수명 추세 비교",
+         xlab="연도", ylab="기대수명",
+         color="국가명") %>% 
+    ly_lines(x=year, y=lifeExp, color=country) %>% 
+    ly_points(x=year, y=lifeExp, color=country, fill_alpha=1,
+              hover = c(country, year, lifeExp),
+              size=5) %>% 
+    set_palette(discrete_color = pal_color(c("orange", "yellow")))
+
+bokeh_list <- list(korea_bokeh, oceania_bokeh)
+
+grid_plot(bokeh_list, same_axes = TRUE, 
+          width = 800, height=600, 
+          nrow = 1)
+```
+
+
+## `facet` 동질 그래프 조합 {#rbokeh-ggplot-viz-facet-run}
+
+`facet` 다수 작은 그래프(small multiple graph)를 구현하기 위해서 먼저 데이터를 `split()` 함수로 미리 지정한 그룹에 맞춰 쪼갠다. 본 사례의 경우 국가(`country`)를 기준으로 쪼개 놓고 한 국가를 대상으로 시각화하는 `rbokeh` 함수(`life_expect_plot()`)를 작성한다. 그리고 `lapply` 함수를 사용해서 각 국가별 데이터에 `rbokeh` 함수를 적용시켜 그래프 리스트를 작성한다. 그리고 나서 `grid_plot()`으로 모아 찍기 기능을 활용하여 인터랙티브 그래프 작성을 마무리한다.
+
+
+```{r rbokeh-line-plot-interactive-facet}
+## 데이터 준비: 한국과 오세아니아
+facet_df <- gapminder %>% 
+  filter(str_detect(country, "Korea")) %>% 
+  droplevels()
+
+facet_split_list <- split(facet_df, facet_df$country) 
+
+## 데이터 함수
+life_expect_plot <- function(df) {
+  figure() %>%
+    ly_lines(x = year, y=lifeExp, data = df) %>% 
+    ly_points(x=year, y=lifeExp, fill_alpha=1,
+              hover = c(country, year, lifeExp),
+              size=5, data = df)
+  }
+
+## 데이터를 함수에 적합(apply)
+facet_fig_list <- lapply(facet_split_list, life_expect_plot)
+
+## bokeh 시각화
+grid_plot(facet_fig_list, same_axes = TRUE, 
+          width = 800, height=600, 
+          nrow = 1)
+```
+
+
+# 지리정보 [^interactive-map-in-r] {#rbokeh-ggplot-viz-map}
+
+[^interactive-map-in-r]: [UseR 2017, "Interactive Maps in R"](https://bhaskarvk.github.io/user2017.geodataviz/notebooks/03-Interactive-Maps.nb.html)
+
+공항 데이터를 가져와서 위경도 데이터를 정리한다. 그리고 나서 `gmap()` 함수로 지도를 가져와서 `ly_points()` 함수를 엮어 시각화한다.
+
+
+```{r rbokeh-line-plot-interactive-map}
+airports <- read_csv("https://raw.githubusercontent.com/datasets/airport-codes/master/data/airport-codes.csv")
+
+airport_df <- airports %>% 
+  select(ident, name, iso_country, municipality, coordinates) %>% 
+  separate(coordinates, into=c("lat", "lon"), sep = ",") %>% 
+  mutate(lon = as.numeric(lon),
+         lat = as.numeric(lat)) %>% 
+  filter(iso_country == "KR")
+
+korea_map <- gmap(lat = median(airport_df$lat), lng = median(airport_df$lon), zoom = 7, map_style = gmap_style("blue_water"))
+
+korea_map %>% ly_points(x = lon, y = lat, 
+                        data = airport_df,
+                        line_alpha = 0, size = 8,
+                        hover = c(name, municipality))
+```
