@@ -1,0 +1,195 @@
+---
+layout: page
+title: "데이터 시각화 - 인터랙티브"
+subtitle: "빅데이터 시각화 - `trelliscope`"
+author:
+    name: xwMOOC
+    url: https://www.facebook.com/groups/tidyverse/
+    affiliation: Tidyverse Korea
+date: "`r Sys.Date()`"
+output:
+  html_document: 
+    toc: yes
+    toc_float: true
+    highlight: tango
+    code_folding: show
+    number_section: true
+    self_contained: true
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE,
+                    comment="", digits = 3, tidy = FALSE, prompt = FALSE, fig.align = 'center')
+
+```
+
+
+# 빅데이터 압축 {#bigdata-compression}
+
+빅데이터를 압축하는 방식은 데이터 자료형에 따라 다음과 같이 나눌 수 있다.
+
+- 연속형 데이터 &rarr; 히스토그램
+- 범주형 데이터 &rarr; 막대그래프
+- 시계열 데이터 &rarr; `group_by()` + `summarize()`로 시간대별 요약
+
+
+```{r bigdata-continuous}
+library(tidyverse)
+library(gapminder)
+library(cowplot)
+library(scales)
+
+gapminder_df <- gapminder %>% 
+  filter(year == max(year))
+
+continous_g <- gapminder_df %>% 
+  ggplot(aes(x=gdpPercap)) +
+    geom_histogram() +
+    labs(title = "연속형 변수 요약")
+
+discrete_g <- gapminder_df %>% 
+  count(continent) %>% 
+  ggplot(aes(x=continent, y=n)) +
+    geom_col() +
+    labs(title = "범주형 변수 요약")
+
+time_series_g <- gapminder %>% 
+  group_by(year) %>% 
+  summarise(lifeExp_median = median(lifeExp)) %>% 
+  ggplot(aes(x=year, y=lifeExp_median)) +
+    geom_line() +
+    geom_point() +
+    labs(title = "시계열 변수 요약")
+
+plot_grid(continous_g, discrete_g, time_series_g, nrow=1)
+```
+
+
+## 빅데이터 산점도 시각화 {#bigdata-compression-scatterplot}
+
+
+[캐글 - SF Salaries, Explore San Francisco city employee salary data](https://www.kaggle.com/kaggle/sf-salaries) 데이터를 다운로드 받아 빅데이터 시각화를 위한 예제 데이터로 사용한다.
+
+동일한 데이터를 압축없이 산점도로 찍데 되면 시각화에 시간이 많이 소요된다. 하지만 `geom_hex()`를 사용하면 데이터가 압축되어 요약되기 때문에 시각화에 걸리는 시간도 많이 줄일 수 있다.
+
+```{r bigdata-scatterplot}
+sf_df <- read_csv("data/Salaries.csv")
+
+scatterplot_g <- sf_df %>% 
+  ggplot(aes(x=BasePay, y=TotalPay)) +
+    geom_point(alpha=0.1) +
+    scale_x_sqrt(labels = scales::comma) +
+    scale_y_sqrt(labels = scales::comma)
+
+
+hex_g <- sf_df %>% 
+  ggplot(aes(x=BasePay, y=TotalPay)) +
+    geom_hex(bins=100) +
+    scale_x_sqrt(labels = scales::comma) +
+    scale_y_sqrt(labels = scales::comma)
+
+hex_g
+```
+
+
+## 연도별 요약 - `facet` {#bigdata-compression-facet}
+
+기초 통계량 분석을 위해서 데이터를 정제하고 이를 `group_by()` + `summarize()`로 요약을 한 후에 `ggplot2` 팩키지 `facet` 기능을 활용하여 간결하게 요약한다. 
+
+```{r bigdata-facet}
+sf_tidy_df <- sf_df %>% 
+  select(-Agency, -Notes, -Status, -Benefits, -TotalPayBenefits, -JobTitle, -Id) %>% 
+  gather(`항목`, `금액`, -Year, -EmployeeName)
+
+sf_salary_summary_df <- sf_tidy_df %>% 
+  group_by(Year, `항목`) %>% 
+  summarise(`평균연봉` = mean(`금액`, na.rm = TRUE))
+
+sf_salary_summary_df %>% 
+  ggplot(aes(x=Year, y=`평균연봉`)) +
+    geom_line(size=2, color="darkgray") +
+    geom_point(size=3, color="black") +
+    facet_wrap(~ `항목`, nrow=1)
+```
+
+
+## 분포비교 - `QQ-plot` {#bigdata-compression-distribution}
+
+연도별로 SF지역 연봉변화를 QQ-plot을 통해 확인하는 것도 연도별 차이를 식별하는 시각화 방법이 된다.
+
+```{r bigdata-distribution}
+sf_tidy_df %>% 
+  sample_frac(0.1) %>% 
+  ggplot(aes(sample=`금액`, color= as.factor(Year))) +
+    geom_qq() +
+    facet_wrap(~`항목`)
+```
+
+
+# `facet` &rarr; `trelliscopeJS` {#bigdata-facet2trelliscope}
+
+`facet`은 빅데이터를 요약하여 시각화하는데 권장되는 방식이지만, 
+그룹을 쪼갤 집단이 많아지는 경우 `facet`창이 너무 작아 유용하지 않게 된다.
+이런 경우 `trelliscopeJS`가 훌륭한 대안이 된다.
+
+## `facet` 무엇이 문제인가? {#bigdata-facet-problem}
+
+`facet_wrap()` 함수에 너무 많은 조합의 수가 발생될 경우 `facet`창이 너무나 적은 화면에 나눠서 표시가 되어 유용성이 급격히 떨어진다.
+
+```{r bigdata-facet-trelliscope}
+library(trelliscopejs)
+
+gapminder %>% 
+  ggplot(aes(x = year, y = lifeExp)) +
+    geom_line() +
+    facet_wrap( ~ country+continent) +
+    guides(color = FALSE)
+```
+
+## 가자 `trelliscopeJS`를 향해서... {#bigdata-trelliscopeJS}  
+
+`ggplot2` 문법에 맞춰 시각화 코드를 작성하고 `facet_wrap()` 대신에 `facet_trelliscope()`을 사용해서 시각화를 하게 되면 범주수에 관계없이 유연한 시각화 산출물 생성이 가능하게 된다.
+
+
+```{r bigdata-facet-trelliscope-go}
+ggplot(gapminder, aes(x = year, y = lifeExp)) +
+  geom_line() +
+  facet_trelliscope(~ country + continent,
+                    nrow=3, ncol=4)
+```
+
+
+## 인터랙티브 `trelliscopeJS` {#bigdata-trelliscope-interactive}
+
+`as_plotly = TRUE`로 설정하게 되면 `plotly` 기능을 사용해서 인터랙티브 기능도 추가시킬 수 있다.
+
+```{r bigdata-facet-trelliscope-interactive}
+ggplot(gapminder, aes(x = year, y = lifeExp)) +
+  geom_line() +
+  geom_point() +
+  facet_trelliscope(~ country + continent,
+                    nrow=3, ncol=4,
+                    as_plotly = TRUE)
+```
+
+
+## 인지(Cognostics) `trelliscopeJS` {#bigdata-trelliscope-interactive}
+
+인지(Cognostics)기능은 "Cognostics are univariate statistics (or metrics) for a subset of data"와 같이 정의된다. [autocogs](https://github.com/schloerke/autocogs) 기능도 `auto_cog = TRUE`을 넣어 즉시 사용 가능하다. `Filter` 메뉴에 `autocogs` 가 자동으로 생성되어 `_bivar_correlation`이 계산되어 이를 통해서 인사이트를 얻을 수 있게 된다.
+
+```{r bigdata-facet-trelliscope-autocogs}
+ggplot(gapminder, aes(x = year, y = lifeExp)) +
+  geom_line() +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  facet_trelliscope(~ country + continent,
+                    nrow=3, ncol=4,
+                    as_plotly = TRUE,
+                    auto_cog = TRUE)
+```
+
+
+
