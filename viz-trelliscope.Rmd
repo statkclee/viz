@@ -14,7 +14,7 @@ output:
     highlight: tango
     code_folding: show
     number_section: true
-    self_contained: true
+    self_contained: false
 editor_options: 
   chunk_output_type: console
 ---
@@ -158,6 +158,8 @@ gapminder %>%
 ggplot(gapminder, aes(x = year, y = lifeExp)) +
   geom_line() +
   facet_trelliscope(~ country + continent,
+                    name = "gapminder-hello-world",
+                    path = "trelliscope_files",
                     nrow=3, ncol=4)
 ```
 
@@ -172,6 +174,8 @@ ggplot(gapminder, aes(x = year, y = lifeExp)) +
   geom_point() +
   facet_trelliscope(~ country + continent,
                     nrow=3, ncol=4,
+                    name = "gapminder-plotly",
+                    path = "trelliscope_files",
                     as_plotly = TRUE)
 ```
 
@@ -187,6 +191,8 @@ ggplot(gapminder, aes(x = year, y = lifeExp)) +
   geom_smooth(method = "lm") +
   facet_trelliscope(~ country + continent,
                     nrow=3, ncol=4,
+                    name = "gapminder-autocogs",
+                    path = "trelliscope_files",
                     as_plotly = TRUE,
                     auto_cog = TRUE)
 ```

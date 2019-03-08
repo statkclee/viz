@@ -1,0 +1,32 @@
+__loadDisplayList__98d65d8b([
+  {
+    "group": "common",
+    "name": "gapminder_autocogs",
+    "desc": "",
+    "n": 142,
+    "height": 500,
+    "width": 500,
+    "updated": "2019-03-07 15:42:51",
+    "keySig": "6c71dcaf175cfb5dfa3b8fbd5839dab0"
+  },
+  {
+    "group": "common",
+    "name": "gapminder_hello_world",
+    "desc": "",
+    "n": 142,
+    "height": 500,
+    "width": 500,
+    "updated": "2019-03-07 15:42:05",
+    "keySig": "6c71dcaf175cfb5dfa3b8fbd5839dab0"
+  },
+  {
+    "group": "common",
+    "name": "gapminder_plotly",
+    "desc": "",
+    "n": 142,
+    "height": 500,
+    "width": 500,
+    "updated": "2019-03-07 15:42:20",
+    "keySig": "6c71dcaf175cfb5dfa3b8fbd5839dab0"
+  }
+])
