@@ -1,0 +1,39 @@
+---
+layout: page
+title: xwMOOC 데이터 시각화
+subtitle: 빅4 회계법인
+date: "`r Sys.Date()`"
+author: "[Tidyverse Korea](https://www.facebook.com/groups/tidyverse/)"
+output:
+  html_document: 
+    theme: default
+    toc: yes
+    toc_float: true
+    highlight: tango
+    code_folding: show
+    number_sections: TRUE
+mainfont: NanumGothic
+editor_options: 
+  chunk_output_type: console
+---
+
+``` {r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE,
+                      comment="", digits = 3, tidy = FALSE, prompt = FALSE, fig.align = 'center')
+
+library(tidyverse)
+```
+
+빅4 회계법인에 대해 자세히 살펴보자
+
+# 데이터 {#b4-dataset}
+
+```{r ingest-data}
+library(tidyverse)
+library(httr)
+library(glue)
+library(jsonlite)
+
+```
+
+
