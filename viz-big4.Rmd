@@ -36,4 +36,74 @@ library(jsonlite)
 
 ```
 
+# 빅4 매출 순위 {#revenue-company}
+
+빅4 회계법인 및 중소 회계법인 결산분석이 [조세일보](http://www.joseilbo.com/index.php)에 나름 자세히 정리되어 있다.
+
+- [조세일보(2019-08-01), "'매출 5천억' 고지 눈앞에... '삼정회계법인' 뜯어보기"](http://www.joseilbo.com/news/htmls/2019/08/20190801381401.html)
+- [조세일보(2019-09-03), "'삼일회계법인'의 위엄…1조 매출 목표 허언 아니다", ](http://www.joseilbo.com/news/htmls/2019/09/20190903383256.html)
+- [조세일보(2019-08-05), "요동치는 빅4 회계법인 순위…그 중심에 선 '한영'"](http://www.joseilbo.com/news/htmls/2019/08/20190805381556.html)
+- [조세일보(2019-09-19), "고군분투 했지만…'안진', 분식회계 여파 극복 아직 멀었다"](http://www.joseilbo.com/news/htmls/2019/09/20190919384213.html)
+- [조세일보(2019-07-18), "'빅4'만 보이나, 우리도 있다... 중견회계법인들은 지금 '성장 中'"](http://www.joseilbo.com/news/htmls/2019/07/20190718380486.html)
+
+
+# 다트 재무제표 {#dart-financial-statement}
+
+[한국 금융감독원에서 운영하는 다트(Dart) 시스템 크롤링을 위한 라이브러리](https://github.com/josw123/dart-fss)가 파이썬으로 공개되어 있다. 
+이를 위해서 [OPEN DART](https://opendart.fss.or.kr/)에서 인증키를 발급받아 파이썬 라이브러리인 `dart-fss`를 사용해서 회계법인 재무제표를 가져온다.
+
+```{r crawl-opendart, eval = FALSE}
+library(tidyverse)
+library(httr)
+library(rvest)
+
+Sys.setlocale("LC_ALL", "C")
+
+pwc_url <- 'http://dart.fss.or.kr/dsaf001/main.do?rcpNo=20190905000354'
+  
+req  <- GET(pwc_url) 
+
+pwc_df <- req %>% 
+  read_html() %>% 
+  html_nodes(xpath = '/html/body/table[4]') %>% 
+  html_table(fill=TRUE)
+
+Sys.setlocale("LC_ALL", "Korean")
+
+pwc_df
+```
+
+
+## `dart-fss` 파이썬 {#dart-financial-statement-python}
+
+```{python dart-fss, eval = FALSE}
+# 다트 파이썬 라이브러리
+import dart_fss as dart
+
+# 인증키
+api_key='XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+dart.set_api_key(api_key=api_key)
+
+# 빅4 이름으로 찾기 ( 리스트 반환 )
+corp_list = dart.get_corp_list()
+
+samsung = corp_list.find_by_corp_name('삼성전자', exactly=True)[0]
+
+pwc = corp_list.find_by_corp_name('삼일회계법인', exactly=True)[0]
+kpmg = corp_list.find_by_corp_name('삼정회계법인', exactly=True)[0]
+ey = corp_list.find_by_corp_name('한영회계법인', exactly=True)[0]
+deloitte = corp_list.find_by_corp_name('안진회계법인', exactly=True)[0]
+
+# 빅4 재무제표 
+
+samsung_fs = samsung.extract_fs(bgn_de='20180101')
+
+samsung_fs['is']
+
+# 저장
+filename = 'samsung'
+path = 'c:/docs/viz/data/dart'
+samsung_fs.save(path=path)
+```
+
 
