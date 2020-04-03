@@ -22,7 +22,7 @@ title: 데이터 과학 -- 시각화
     - [그래프 한장에 그래프 다수 찍기](viz-multiple-plots.html)
     - [그림을 파일에 저장](viz-save-plot.html) 
     - [시각화 픽셀 정보량 극대화](viz-pixel-information.html)
-- **정적 그래프 - `ggplot`**
+- [**그래프 문법 - `ggplot`**](viz-ggplot2.html)
     - [`ggplot2` 색상 제어](viz-ggplot2-control.html)
     - [데이터 시각화(ggplot2, ggvis)](viz-ggplot2.html)    
     - [`lattice` - 격자그림(Trellis Graphics)](viz-trellis.html)

@@ -1,24 +1,35 @@
 ---
 layout: page
-title: 데이터 과학
-subtitle: 데이터 시각화(ggplot2, ggvis)
+title: 데이터 시각화
+subtitle: 그래프 문법 - `ggplot`
+author:
+    name: "[Tidyverse Korea](https://web.facebook.com/groups/tidyverse/)"
+date: "`r Sys.Date()`"
 output:
   html_document: 
-    keep_md: yes
-  pdf_document:
-    latex_engine: xelatex
-mainfont: NanumGothic
+    toc: yes
+    toc_float: true
+    highlight: tango
+    code_folding: show
+    number_section: true
+    self_contained: true
+editor_options: 
+  chunk_output_type: console
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE,
+                      comment="", digits = 3, tidy = FALSE, prompt = FALSE, fig.align = 'center')
 
-``` {r, include=FALSE}
-source("tools/chunk-options.R")
-#source("setup.R")
+library(tidyverse)
+library(extrafont)
+loadfonts()
 ```
 
 
-> ## 학습 목표 [^data-carpentry-ggplot2] {.objectives}
->
+
+# 학습 목표 [^data-carpentry-ggplot2] {-#objectives}
+
 > * `ggplot2` 팩키지로 데이터를 시각화한다. 
 > * 고난도 복잡한 시각화 산출물을 `ggplot2` 팩키지를 활용하여 단계적으로 구축한다.
 > * Figshare [surveys.csv](http://files.figshare.com/1919744/surveys.csv), [mammals data](http://figshare.com/articles/Portal_Project_Teaching_Database/1314459)
@@ -27,14 +38,14 @@ source("tools/chunk-options.R")
 [^data-carpentry-ggplot2]: [Data Carpentry R lessons on ecology](http://www.datacarpentry.org/R-ecology/)
 
 
-### `ggplot2`로 시각화를 하는 이유
+# `ggplot2`로 시각화하는 이유 {#reason-why-ggplot2}
 
 R에 기본적으로 시각화를 위한 다양한 기능이 존재하지만, `ggplot2`가 기본으로 제공되는 R 시각화 기능 위에 더욱 강력한 기능을 제공한다.
 기본적인 R 기능도 상대적으로 다른 소프트웨어 서비스나 제품과 비교가 되지 않을 정도록 강력하다. 이런 점에서 R은 참 겸손하다는 생각이 든다.
 
-### 데이터 다운로드와 시각화 툴체인 준비
+# 데이터 다운로드와 시각화 툴체인 
 
-``` {r message=FALSE, warning=FALSE, comment=FALSE}
+``` {r ggplot2-visualization}
 # read_csv로 csv 파일을 불러 읽어온다.
 library(readr)
 # 시각화를 위한 ggplot2 팩키지를 불러 읽어온다. 
@@ -42,69 +53,74 @@ library(ggplot2)
 # ggplot2에 입력데이터로 사용될 데이터를 전처리한다.
 library(dplyr)
 # 데이터를 불러온다.
-download.file("https://ndownloader.figshare.com/files/2292169",
-              "portal_data_joined.csv")
+download.file(url = "https://ndownloader.figshare.com/files/2292169",
+              destfile = "data/portal_data_joined.csv")
 
-surveys.dat <- read.csv('portal_data_joined.csv')
+surveys_dat <- read_csv('data/portal_data_joined.csv')
 ```
 
 [figshare](https://figshare.com/)[^figshare-wired] 사이트에서 데이터를 가져온다. `surveys.csv` 데이터는 포획된 동물에 관한 측정정보가 담겨 있다.
 
-### 시각화를 위한 데이터 전처리 과정
+[^figshare-wired]: ["figshare wants to open up scientific data to the world"](http://www.wired.co.uk/news/archive/2014-07/25/figshare)
+
+## 시각화를 위한 데이터 전처리 과정 {#ggplot2-survey-preprocessing}
 
 다운로드 받은 데이터에 대한 요약정보를 `summary` 함수를 사용해서 살펴본다.
 
-``` {r}
-summary(surveys.dat)
+``` {r ggplot2-surveys-summary}
+summary(surveys_dat)
 ```
 
-#### 1 단계 - 결측값 제거
+### 1 단계 - 결측값 제거 {#surveys-missing}
 
 데이터셋에 일부 결측정보가 `summary` 실행결과를 보여주고 있어, 이를 제거한다. 
 각 변수마다 결측치가 있어 이를 한땀 한땀 정성스럽게 결측정보를 제거하는 대신에 `dplyr` 파이프 연산자를 사용하여
 일괄적으로 처리한다.
 
-``` {r message=FALSE, warning=FALSE, comment=FALSE}
-surveys.complete <- surveys.dat %>%
+``` {r surveys-missing}
+surveys_complete <- surveys_dat %>%
                     filter(species_id != "") %>%       # species_id 결측값 제거
                     filter(!is.na(weight)) %>%          # weight 결측값 제거
                     filter(!is.na(hindfoot_length))     # hindfoot_length 결측값 제거
 ```
-#### 2 단계 - 미미한 자료 제거
+
+### 2 단계 - 미미한 자료 제거 {#surveys-near-zero}
 
 개체수가 적은 종이 많아서, 개체수 기준 10 보다 적은 종은 제거하기로 한다.
 먼저 `group_by` 함수로 개체종을 그룹으로 군집화하고, `tally` 함수로 각 종별로 개체수를 세고, 
 내부인자로 `sort=TRUE` 를 넣어서 내림차순으로 정렬한다. 
 
-
-``` {r message=FALSE, warning=FALSE, comment=FALSE}
-species.counts <- surveys.complete %>%
+``` {r survey-remove-minimal}
+species_counts <- surveys_complete %>%
   group_by(species_id) %>%
-  tally(sort=TRUE)
+  count(sort=TRUE)
 
-tail(species.counts)
+tail(species_counts)
 ```
 
 개체수가 10개 미만인 종을 제거하고, 시각화를 위한 기본 데이터셋 준비를 완료한다.
 
-``` {r message=FALSE, warning=FALSE, comment=FALSE}
-frequent.species <- species.counts %>%
+``` {r surveys-remove-species}
+frequent_species <- species_counts %>%
                     filter(n >= 10) %>%
-                    select(species_id)
+                    select(species_id) %>% 
+                    pull
 
-surveys.complete <- surveys.complete %>%
-           filter(species_id %in% frequent.species$species_id)
+surveys_complete <- surveys_complete %>%
+           filter(species_id %in% frequent_species)
 ```
 
-#### 기본 R 시각화 기능 활용
+# 시각화 {#surveys-base-plot-viz}
+
+## Base R 시각화 기능 {#surveys-base-plot}
 
 `weight`를 예측변수 `x` 위치에 두고, 종속변수 `hindfoot_length`를 `y`에 두고 R 기본 시각화 산점도를 도식화해 보자.
 
-``` {r base-plot}
-plot(x = surveys.complete$weight, y = surveys.complete$hindfoot_length)
+``` {r survey-base-plot}
+plot(x = surveys_complete$weight, y = surveys_complete$hindfoot_length)
 ```
 
-### `ggplot2` 팩키지로 시각화
+## `ggplot2`로 시각화 {#surveys-ggplot}
 
 `ggplot2`를 사용해서 R 기본 내장된 시각화 기능을 대신하여 동일한 작업을 수행할 수 있다.
 
@@ -117,58 +133,64 @@ plot(x = surveys.complete$weight, y = surveys.complete$hindfoot_length)
 
 - `data` 인자로 특정 데이터프레임과 플롯을 묶어 연결시킨다.
 
-```{r, eval=FALSE}
-ggplot(data = surveys.complete)
+```{r survey-ggplot-data}
+ggplot(data = surveys_complete)
 ```
 
 - 미적 요소를 `aes` 로 정의해서, 플롯축에 데이터 변수를 매핑하고, 크기, 모양, 색상 등을 시각화한다. 
 
-```{r, eval=FALSE}
-ggplot(data = surveys.complete, aes(x = weight, y = hindfoot_length))
+```{r survey-ggplot-mapping}
+ggplot(data = surveys_complete, aes(x = weight, y = hindfoot_length))
 ``` 
 
 - 데이터에 대한 시각적 표현(점, 선, 막대 등)을 하는데 `geoms` 을 사용해서 플롯에 반영한다. 
 플롯에 `geoms`를 추가하는데 `+` 연산자를 사용한다::
 
 ```{r first-ggplot}
-ggplot(data = surveys.complete, aes(x = weight, y = hindfoot_length)) +
+ggplot(data = surveys_complete, aes(x = weight, y = hindfoot_length)) +
   geom_point()
 ``` 
 
-> #### 주의 사항 {.callout}
->
-> - `ggplot` 함수에 넣은 어떤 것도 추가한 `geom` 계층을 통해 반영된다. 즉, 보편적인 플롯 설정이다.
-> - `aes()`에 설정한 `x`축, `y`축도 여기에 포함된다.
 
-### 플롯 변경하기
+<style>
+div.blue { background-color:#e6f0ff; border-radius: 5px; padding: 10px;}
+</style>
+<div class = "blue">
+
+**주의 사항**
+
+- `ggplot` 함수에 넣은 어떤 것도 추가한 `geom` 계층을 통해 반영된다. 즉, 보편적인 플롯 설정이다.
+- `aes()`에 설정한 `x`축, `y`축도 여기에 포함된다.
+
+</div>
 
 - 투명도(transparaency, alpha)를 추가한다.
 
 ```{r first-ggplot-alpha}
-ggplot(data = surveys.complete, aes(x = weight, y = hindfoot_length)) +
+ggplot(data = surveys_complete, aes(x = weight, y = hindfoot_length)) +
   geom_point(alpha=0.1)
 ``` 
 
 - 색상을 추가한다.
 
 ```{r first-ggplot-alpha-color}
-ggplot(data = surveys.complete, aes(x = weight, y = hindfoot_length)) +
+ggplot(data = surveys_complete, aes(x = weight, y = hindfoot_length)) +
   geom_point(alpha=0.1, color = "blue")
 ``` 
 
-### 상자 그림
+## 상자 그림 {#ggplot-boxplot}
 
 각 종별로 체중 분포를 시각화한다.
 
-```{r boxplot}
-ggplot(data = surveys.complete, aes(x = species_id,  y = weight)) +
+```{r survey-boxplot}
+ggplot(data = surveys_complete, aes(x = species_id,  y = weight)) +
                    geom_boxplot()
 ```
 
 상자그림에 점을 추가해서, 특이한 관측점과 많이 관측된 측정값을 볼 수 있다.
 
 ```{r boxplot-with-points}
-ggplot(data = surveys.complete, aes(x = species_id, y = weight)) +
+ggplot(data = surveys_complete, aes(x = species_id, y = weight)) +
                    geom_jitter(alpha = 0.3, color = "tomato") +
                    geom_boxplot(alpha = 0)
 ```
@@ -180,49 +202,48 @@ ggplot(data = surveys.complete, aes(x = species_id, y = weight)) +
 >
 > `hindfoot_length`에 대한 상자그림을 생성한다.
 
-### 시계열 데이터 시각화
+# 시계열 데이터 시각화 {#survey-time-series}
 
 각 종별로 년도별 개체수를 계산한다.
 이 작업을 수행하기 위해서는 먼저 데이터를 그룹집단화하고, 각 그룹마다 해당 레코드 개수를 센다.
 
-
-```{r}
-yearly.counts <- surveys.complete %>%
+```{r surveys-time-series}
+yearly_counts <- surveys_complete %>%
                  group_by(year, species_id) %>%
-                 tally
+                 count(sort = TRUE)
 ```
 
 `x`축에 연도, `y` 축에 개수를 놓고 직선으로 시간에 따라 경과한 정보를 시각화한다.
 
-```{r}
-ggplot(data = yearly.counts, aes(x = year, y = n)) +
+```{r survey-time-series}
+ggplot(data = yearly_counts, aes(x = year, y = n)) +
                   geom_line()
 ```
 
 불행하게도, 상기 그래프는 원하는 바가 아닌데, 이유는 모든 종에 대해 데이터를 시각화하게 명령어를 전송했기 때문이다.
 `species_id`로 시각화한 데이터를 쪼갠 후에 `ggplot` 명령어로 시각화하게 한다.
 
-```{r}
-ggplot(data = yearly.counts, aes(x = year, y = n, group = species_id)) +
+```{r surveys-group-by}
+ggplot(data = yearly_counts, aes(x = year, y = n, group = species_id)) +
   geom_line()
 ```
 
 색상을 추가하게 되면, 그래프에서 개체를 식별하게 된다.
 
-```{r}
-ggplot(data = yearly.counts, aes(x = year, y = n, group = species_id, color = species_id)) +
+```{r survey-time-series-color}
+ggplot(data = yearly_counts, aes(x = year, y = n, group = species_id, color = species_id)) +
   geom_line()
 
 ```
 
-###  측면보여주기(faceting)
+#  측면보여주기(faceting) {#surveys-facet}
 
 `ggplot` 에는 *측면 보여주기(faceting)* 라는 특수한 기능이 있어서, 특정 요인에 따라
 그래프 하나를 다수 그래프로 쪼갤 수 있다. 예를 들어, 각 종마다 시계열 그래프를 별도로 
 도식화할 수 있다.
 
 ```{r first-facet}
-ggplot(data = yearly.counts, aes(x = year, y = n, color = species_id)) +
+ggplot(data = yearly_counts, aes(x = year, y = n, color = species_id)) +
   geom_line() + facet_wrap(~species_id)
 ``` 
 
@@ -235,24 +256,24 @@ ggplot(data = yearly.counts, aes(x = year, y = n, color = species_id)) +
 >  
 > 
 > 
-> ```{r}
+> ```{r surveys-yearly-sex}
 > sex_values = c("F", "M")
-> surveys.complete <- surveys.complete %>%
+> surveys_complete <- surveys_complete %>%
 >            filter(sex %in% sex_values)
 > ```
 > 
 > - 연도(`year`), 개체 신원정보(`special_id`), 성(`sex`) 별로 그룹을 만든다.
 >
-> ```{r}
-> yearly.sex.counts <- surveys.complete %>%
+> ```{r surveys-yearly-count}
+> yearly_sex_counts <- surveys_complete %>%
 >                      group_by(year, species_id, sex) %>%
->                      tally
+>                      count
 > ```
 >
 > - (개별 그래프 내부에) 성별로 쪼개는 측면보여주기 플롯을 생성한다.
 >
 > ```{r facet-by-species-and-sex}
-> ggplot(data = yearly.sex.counts, aes(x = year, y = n, color = species_id, group = sex)) +
+> ggplot(data = yearly_sex_counts, aes(x = year, y = n, color = species_id, group = sex)) +
 >   geom_line() + facet_wrap(~ species_id)
 > ```
 >
@@ -260,7 +281,7 @@ ggplot(data = yearly.counts, aes(x = year, y = n, color = species_id)) +
 > ` theme_bw()` 함수를 사용해서 흰색 배경을 적용한다.
 > 
 > ```{r facet-by-species-and-sex-white-bg}
-> ggplot(data = yearly.sex.counts, aes(x = year, y = n, color = species_id, group = sex)) +
+> ggplot(data = yearly_sex_counts, aes(x = year, y = n, color = species_id, group = sex)) +
 >   geom_line() + facet_wrap(~ species_id) + theme_bw()
 > ``` 
 > 
@@ -269,17 +290,18 @@ ggplot(data = yearly.counts, aes(x = year, y = n, color = species_id)) +
 > 
 > 
 > ```{r facet-by-species-and-sex-colored}
-> ggplot(data = yearly.sex.counts, aes(x = year, y = n, color = sex, group = sex)) +
+> ggplot(data = yearly_sex_counts, aes(x = year, y = n, color = sex, group = sex)) +
 >   geom_line() + facet_wrap(~ species_id) + theme_bw()
 > ```
 > 
 > > - 연도에 걸쳐 각 종별로 평균 체중을 시각화한다.
 > 
 > ```{r average-weight-timeseries}
-> yearly.weight <- surveys.complete %>%
+> yearly_weight <- surveys_complete %>%
 >                  group_by(year, species_id, sex) %>%
 >                  summarise(avg_weight = mean(weight, na.rm = TRUE))
-> ggplot(data = yearly.weight, aes(x=year, y=avg_weight, color = species_id, group = species_id)) +
+>
+> ggplot(data = yearly_weight, aes(x=year, y=avg_weight, color = species_id, group = species_id)) +
 >   geom_line() + theme_bw()
 > ```
 > 
@@ -287,7 +309,7 @@ ggplot(data = yearly.counts, aes(x = year, y = n, color = species_id)) +
 > > - 수컷과 암컷 체중이 상당히 차이가 나서 성별로 별도 시각화를 수행한다.
 > 
 > ```{r average-weight-time-facet_sex}
-> ggplot(data = yearly.weight, aes(x=year, y=avg_weight, color = species_id, group = species_id)) +
+> ggplot(data = yearly_weight, aes(x=year, y=avg_weight, color = species_id, group = species_id)) +
 >   geom_line() + facet_wrap(~ sex) + theme_bw()
 > ```
 > 지금까지 시각화 결과가 상당히 좋았지만, 아직 출판하기에는 많이 부족하다.
@@ -298,7 +320,7 @@ ggplot(data = yearly.counts, aes(x = year, y = n, color = species_id)) +
 > `x`축과 `y`축에 'year'와 'n' 보다 더 많은 정보를 전달하도록 변경하고, 그래프에 제목을 추가한다.
 > 
 > ```{r number_species_year_with_right_labels}
-> ggplot(data = yearly.sex.counts, aes(x = year, y = n, color = sex, group = sex)) +
+> ggplot(data = yearly_sex_counts, aes(x = year, y = n, color = sex, group = sex)) +
 >   geom_line() +
 >   facet_wrap(~ species_id) +
 >   labs(title = 'Observed species in time',
@@ -310,7 +332,7 @@ ggplot(data = yearly.counts, aes(x = year, y = n, color = species_id)) +
 > 글자 크기를 변경하고 글자체도 변경한다.
 > 
 > ```{r number_species_year_with_right_labels_xfont_size}
-> ggplot(data = yearly.sex.counts, aes(x = year, y = n, color = sex, group = sex)) +
+> ggplot(data = yearly_sex_counts, aes(x = year, y = n, color = sex, group = sex)) +
 >   geom_line() +
 >   facet_wrap(~ species_id) +
 >   labs(title = 'Observed species in time',
@@ -324,7 +346,7 @@ ggplot(data = yearly.counts, aes(x = year, y = n, color = species_id)) +
 > 90도 각도를 사용하거나, 대각선 방향으로 라벨방향을 변경하도록 적절한 각도로 바꾸는 실험을 진행한다. 
 > 
 > ```{r number_species_year_with_right_labels_xfont_orientation}
-> ggplot(data = yearly.sex.counts, aes(x = year, y = n, color = sex, group = sex)) +
+> ggplot(data = yearly_sex_counts, aes(x = year, y = n, color = sex, group = sex)) +
 >     geom_line() +
 >     facet_wrap(~ species_id) +
 >     theme_bw() +
@@ -349,8 +371,8 @@ ggplot(data = yearly.counts, aes(x = year, y = n, color = species_id)) +
 > 완벽한 시각화 산출물이 도출되면, 선호하는 그림파일 형식으로 저장한다.
 > 그림 폭과 높이를 지정해서 크기를 쉽게 변경한다.
 > 
-> ```{r number_species_year_with_right_labels_xfont_save, eval=FALSE}
-> ggsave("observed_species_in_time.png", width=15, height=10)
+> ```{r number_species_year_with_right_labels_xfont_save, eval=TRUE}
+> ggsave("fig/observed_species_in_time.png", width=15, height=10)
 > ```
 
 
@@ -376,7 +398,3 @@ ggplot(data = yearly.counts, aes(x = year, y = n, color = species_id)) +
 
 
 
-
-### 참고자료
-
-[^figshare-wired]: ["figshare wants to open up scientific data to the world"](http://www.wired.co.uk/news/archive/2014-07/25/figshare)
