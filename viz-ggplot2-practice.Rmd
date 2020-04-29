@@ -121,4 +121,5 @@ gridExtra::grid.arrange(default_g, tufte_g, nrow=1)
 
 # `ggplot` 확장 {#ggplot2-steps-extension}
 
+![](fig/ggplot-extension.png)
 
