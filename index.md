@@ -60,6 +60,8 @@ title: 데이터 과학 -- 시각화
         - [대한민국 인구변화(2000 vs 2015) - treemap](viz-pop-treemap.html)
         - [지역내총생산 (GRDP) - treemap](viz-grdp-treemap.html)    
     - [유통소매점 - 인터랙티브 heatmap](viz-retail-heatmap.html)
-    - [저출산과 소요예산 - 상관관계](viz-low-birth-rate.html)    
+    - [저출산과 소요예산 - 상관관계](viz-low-birth-rate.html)
+    - [이모지(emoji): 코로나19](viz-emoji.html)
+
 
 
