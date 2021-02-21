@@ -12,3 +12,4 @@ _site
 twitterOAuth.R
 .httr-oauth
 data/Online Retail.xlsx
+.Rproj.user
