@@ -62,6 +62,7 @@ title: 데이터 과학 -- 시각화
     - [유통소매점 - 인터랙티브 heatmap](viz-retail-heatmap.html)
     - [저출산과 소요예산 - 상관관계](viz-low-birth-rate.html)
     - [이모지(emoji): 코로나19](viz-emoji.html)
+    - [코로나19 사망자](viz-mortality.html)
 
 
 
