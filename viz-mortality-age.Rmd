@@ -50,7 +50,10 @@ library(tidyverse)
 library(covidAgeData)
 library(lubridate)
 
-inputDB <- download_covid("inputDB", progress = FALSE)
+# inputDB <- download_covid("inputDB", progress = FALSE)
+inputDB <-  read_csv("inputDB.zip",
+                     skip = 1,
+                     col_types = "cccccciccdc")
 
 korea_tbl <- subset_covid(inputDB, Country = "South Korea", Region = "All") %>% 
   # 변수명과 자료형 작업
