@@ -1,12 +1,12 @@
 ---
 layout: page
 title: "데이터 과학 - 시각화"
-subtitle: "코로나19 사망자"
+subtitle: "코로나19 사망자와 경제성장율"
 author:
 - name: "이광춘"
   affiliation: "[Tidyverse Korea](https://www.facebook.com/groups/tidyverse/)"
 date: "`r Sys.Date()`"
-tags: ["데이터 과학", "Data Science", "데이터 사이언스", "코로나19", "Covid-19", "사망자", "Mortality"]
+tags: ["데이터 과학", "Data Science", "데이터 사이언스", "코로나19", "Covid-19", "사망자", "Mortality", "경제성장율"]
 output:
   html_document: 
     include:
