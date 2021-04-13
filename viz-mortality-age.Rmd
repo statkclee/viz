@@ -139,3 +139,205 @@ korea_tbl %>%
   theme_bw(base_family = "NanumGothic") +
   labs(title = "연령대별 누적 확진자")
 ```
+
+# ASCFR {#age-ASCFR}
+
+Age-specific case fatality ratio (ASCFR)
+
+```{r ASCFR}
+korea_tbl %>% 
+  pivot_wider(names_from = measure, values_from = value) %>% 
+  filter(date >= ymd("2020-07-01")) %>% 
+  mutate(ASCFR = 사망 / 확진) %>%
+  filter(!is.na(ASCFR)) %>%
+  ggplot(aes(x = age, y = ASCFR, group = date, color = date)) +
+  geom_line(alpha = .2) +
+  scale_y_log10(labels = scales::percent) +
+  theme_bw(base_family = "NanumGothic") +
+  labs(x = "", 
+       title = "연령대별 사망율 비율",
+       color = "월")
+```
+
+# 연령대별 확진자 추이
+
+나이를 20으로 끊어 5개 집단으로 나누고 확진자 추이를 살펴보자.
+
+```{r age-composition}
+library(colorspace)
+
+korea_tbl %>% 
+  separate(age, into = c("age", "etc"), sep = "~", convert = TRUE) %>% 
+  pivot_wider(names_from = measure, values_from = value) %>% 
+  mutate(age20 = age - age %% 20) %>%
+  group_by(date, age20) %>%
+  summarize(확진 = sum(확진)) %>%
+  group_by(age20) %>%
+  arrange(date) %>%
+  mutate(new = 확진 - lead(확진)) %>%
+  ungroup() %>%
+  group_by(date) %>%
+  mutate(N = sum(new),
+         frac = new / N) %>%
+  ungroup() %>%
+  ggplot(aes(x = date,
+             y = frac,
+             fill = as.factor(age20))) +
+  geom_area() +
+  scale_fill_discrete_sequential("Emrld") + 
+  theme_bw(base_family = "NanumGothic") +
+  labs(x     = "", 
+       y     = "점유율",
+       title = "연령대별 확진자 점유 추세",
+       fill  = "연령대(20년)") +
+  scale_y_continuous(labels = scales::percent, limits = c(0,1)) +
+  scale_x_date(date_labels = "%y-%m")
+```
+
+
+# 인구 데이터 {#wpp-population}
+
+```{r wpp-population}
+library(wpp2019)
+
+data(popM)
+
+kor_pop <- popM %>%
+  filter(str_detect(name, "Republic of Korea")) %>% 
+  select(Age = age, Population = `2020`) %>%
+  mutate(Population = Population * 1000,
+         Age = as.character(Age)) %>%
+  separate(Age,
+           into = c("Age",NA),
+           sep = "-") %>%
+  mutate(Age = ifelse(Age == "100+", 100, as.integer(Age)),
+         Age = Age - Age %% 10) %>%
+  group_by(Age) %>%
+  summarize(Population = sum(Population), .groups = "drop") %>% 
+  janitor::clean_names()
+
+kor_pop
+```
+
+## 연령대별 확진율
+
+```{r population-infection}
+
+kor_pop_mortality <- korea_tbl %>% 
+  separate(age, into = c("age", "etc"), sep = "~", convert = TRUE) %>% 
+  select(-etc) %>% 
+  pivot_wider(names_from = measure, values_from = value) %>% 
+  left_join(kor_pop)
+
+kor_pop_mortality %>% 
+  filter(date >= ymd("2020-07-01")) %>% 
+  mutate(확진율 = 확진 / population) %>%
+  ggplot(aes(x = date, y = 확진율, group = age, color = as.factor(age))) +
+  geom_line() +
+  scale_color_discrete_sequential("Magenta") +
+  theme_bw(base_family = "NanumGothic") +
+  labs(x     = "", 
+       y     = "확진율",
+       title = "연령대별 확진율 추세",
+       color = "연령대") +
+  scale_y_log10(labels = scales::percent) +
+  scale_x_date(date_labels = "%y-%m")
+```
+
+## 연령대별 사망률
+
+```{r population-mortality}
+
+kor_pop_mortality %>% 
+  filter(date >= ymd("2020-07-01")) %>% 
+  mutate(사망율 = 사망 / population) %>%
+  ggplot(aes(x = date, y = 사망율, group = age, color = as.factor(age))) +
+  geom_line() +
+  scale_color_discrete_sequential("Magenta") +
+  theme_bw(base_family = "NanumGothic") +
+  labs(x     = "", 
+       y     = "사망율",
+       title = "연령대별 사망율 추세",
+       color = "연령대") +
+  scale_y_log10(labels = scales::percent) +
+  scale_x_date(date_labels = "%y-%m")
+```
+
+
+# 백신 {#vaccine}
+
+4 people take part in a vaccination program, to be given a vaccine that requires 2 doses to be effective against the disease.
+
+- Dina has received 2 doses;
+- Joel has received 1 dose;
+- Tommy has received 1 dose;
+- Ellie has not received any dose.
+
+In our data:
+
+- The total number of doses administered (total_vaccinations) will be equal to 4 (2 + 1 + 1);
+- The total number of people vaccinated (people_vaccinated) will be equal to 3 (Dina, Joel, Tommy);
+- The total number of people fully vaccinated (people_fully_vaccinated) will be equal to 1 (Dina).
+
+```{r add-vaccine}
+library(countrycode)
+
+vaccine <- read_csv("https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/vaccinations/vaccinations.csv",
+                  col_types= "ccDddddddddd")
+
+vaccine_kor <- vaccine %>% 
+  mutate(ISO2 = countrycode(iso_code,
+                             origin = 'iso3c',
+                             destination = 'iso2c')) %>%
+  select(location,
+         ISO2,
+         date,
+         total_vaccinations,
+         people_vaccinated,
+         people_fully_vaccinated) %>% 
+  filter(str_detect(str_to_lower(location), "korea"))
+
+vaccine_kor %>% 
+  pivot_longer(cols = total_vaccinations:people_fully_vaccinated, 
+               names_to = "접종구분", 
+               values_to = "접종자수") %>% 
+  mutate(접종자수 = ifelse(is.na(접종자수), 0, 접종자수)) %>% 
+  ggplot(aes(x = date, y = 접종자수, group = 접종구분)) + 
+    geom_line() +
+    facet_wrap( ~ 접종구분) +
+    theme_bw(base_family = "NanumGothic") +
+    labs(x     = "", 
+         y     = "접종자수",
+         title = "시간별 접종자 증가 추세") +
+    scale_y_continuous(labels = scales::comma) +
+    scale_x_date(date_labels = "%y-%m")
+```
+
+
+## 백신 제조사 {#vaccine-manufacture}
+
+<https://github.com/owid/covid-19-data/tree/master/public/data/vaccinations>
+
+```{r vaccine-manufacture}
+
+v_manufacture <- read_csv("https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/vaccinations/vaccinations-by-manufacturer.csv",
+                  col_types= "cDcd")
+
+v_manufacture_tbl <- v_manufacture %>% 
+  arrange(location, vaccine) %>% 
+  group_by(location, vaccine) %>% 
+  slice(n()) %>% 
+  ungroup()
+
+v_manufacture_tbl %>% 
+  ggplot(aes(x = vaccine, y = total_vaccinations)) +
+    geom_col() +
+    facet_wrap(~location, scales = "free_x") +
+      theme_bw(base_family = "NanumGothic") +
+    labs(x     = "", 
+         y     = "백신 확보량",
+         title = "국가별 백신 확보량") +
+    scale_y_continuous(labels = scales::comma)
+
+```
+
