@@ -1,0 +1,61 @@
+---
+layout: page
+title: 데이터 시각화
+subtitle: "`gif` 이미지 편집"
+author:
+- name: "이광춘"
+  affiliation: "[Tidyverse Korea](https://www.facebook.com/groups/tidyverse/)"
+date: "`r Sys.Date()`"
+tags: ["데이터 과학", "Data Science", "데이터 사이언스", "R", "글꼴", "폰트", "systemfont", "gif", "편집"]
+output:
+  html_document: 
+    include:
+      after_body: footer.html
+      before_body: header.html
+    toc: yes
+    toc_depth: 2
+    toc_float: true
+    highlight: tango
+    number_section: true
+    code_folding: show
+mainfont: NanumGothic
+editor_options: 
+  chunk_output_type: console
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE,
+                    comment="", digits = 3, tidy = FALSE, prompt = FALSE, fig.align = 'center')
+
+library(tidyverse)
+library(scales)
+library(showtext) # 글꼴, install.packages("showtext")
+library(extrafont)
+loadfonts()
+```
+
+# `gif` 이미지 {#gif-image}
+
+[GIPHY](https://giphy.com/gifs/top-gun-oWi0KKWf0D5Di)에서 GIF 파일을 다운로드 받는다.
+
+![](data/top_gun.gif)
+
+# `gif` 작업 {#gif-image-cleaned}
+
+
+```{r gif-image, eval  = FALSE}
+library(tidyverse)
+library(magick)
+
+topgun_gif <- image_read("data/top_gun.gif")
+
+clean_gif <- image_chop(topgun_gif, geometry = "320x200")
+
+image_write(clean_gif, "data/topgun.gif", format="gif")
+  
+```
+
+![](data/topgun.gif)
+
