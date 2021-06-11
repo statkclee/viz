@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 <!DOCTYPE html>
 <html>
   <head>
@@ -120,6 +119,12 @@
 <li><a href="viz-low-birth-rate.html">저출산과 소요예산 - 상관관계</a></li>
 <li><a href="viz-emoji.html">이모지(emoji): 코로나19</a></li>
 </ul></li>
+<li><strong>코로나19</strong>
+<ul>
+<li><a href="viz-mortality.html">코로나19 사망자와 경제성장율</a></li>
+<li><a href="viz-mortality-age.html">코로나19 연령별 사망자</a></li>
+<li><a href="viz-vaccine-trends.html">코로나19 백신 접종 추세</a></li>
+</ul></li>
 </ul>
         </div>
       </div>
@@ -137,147 +142,3 @@
     <script src='https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'></script>
   </body>
 </html>
-=======
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <meta name="generator" content="pandoc">
-    <title>Software Carpentry: 데이터 과학 – 시각화</title>
-    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" type="text/css" href="css/bootstrap/bootstrap.css" />
-    <link rel="stylesheet" type="text/css" href="css/bootstrap/bootstrap-theme.css" />
-    <link rel="stylesheet" type="text/css" href="css/swc.css" />
-    <link rel="alternate" type="application/rss+xml" title="Software Carpentry Blog" href="http://software-carpentry.org/feed.xml"/>
-    <meta charset="UTF-8" />
-    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
-    <!--[if lt IE 9]>
-      <script src="https://html5shim.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
-
-    <script>
-      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-
-      ga('create', 'UA-59802572-17', 'auto');
-      ga('send', 'pageview');
-
-    </script>
-  </head>
-  <body class="lesson">
-    <div class="container card">
-      <div class="banner">
-        <a href="http://software-carpentry.org" title="Software Carpentry">
-          <img alt="Software Carpentry banner" src="img/software-carpentry-banner.png" />
-        </a>
-      </div>
-      <article>
-      <div class="row">
-        <div class="col-md-10 col-md-offset-1">
-                    <h1 class="title">데이터 과학 – 시각화</h1>
-          <aside class="callout panel panel-info">
-<section id="ai-is-a-superpower" class="panel-heading">
-<h3><span class="glyphicon glyphicon-pushpin"></span>AI is a Superpower</h3>
-</section>
-<div class="panel-body">
-<p>“AI is a superpower!!!”, 인공지능을 체득하면 슈퍼파워를 손에 쥘 것이다. <a href="https://twitter.com/andrewyng/status/728986380638916609">Andrew Ng</a></p>
-<p>금수저, 은수저 슈퍼파워를 받은 사람과 기계학습을 통달한 흑수저들간의 무한경쟁이 드뎌 시작되었다. 물론, 금수저를 입에 물고 기계학습을 통달한 사람이 가장 유리한 출발을 시작한 것도 사실이다.</p>
-</div>
-</aside>
-<h2 id="학습목차">학습목차</h2>
-<ul>
-<li><a href="viz.html">시각화(Visualization)</a>
-<ul>
-<li><a href="viz-history.html">기념비적인 시각화 역작모음</a></li>
-<li><a href="viz-secret.html">행복한 시각화 생활을 위한 비밀</a></li>
-<li><a href="viz-r-font.html">R 그래프/코딩 글꼴(font)</a></li>
-<li><a href="viz-r-colors.html">R 시각화 색상(color)</a></li>
-<li><a href="viz-multiple-plots.html">그래프 한장에 그래프 다수 찍기</a></li>
-<li><a href="viz-save-plot.html">그림을 파일에 저장</a></li>
-<li><a href="viz-pixel-information.html">시각화 픽셀 정보량 극대화</a></li>
-</ul></li>
-<li><a href="viz-ggplot2-practice.html">그래프 문법 실무</a>
-<ul>
-<li><a href="viz-ggplot2.html">그래프 문법 - <code>ggplot</code></a></li>
-<li><a href="viz-ggplot2-control.html"><code>ggplot2</code> 색상 제어</a></li>
-<li><a href="viz-ggplot2.html">데이터 시각화(ggplot2, ggvis)</a><br />
-</li>
-<li><a href="viz-trellis.html"><code>lattice</code> - 격자그림(Trellis Graphics)</a></li>
-<li><a href="viz-prior-posterior.html">점그래프 - 전후변화</a></li>
-<li><a href="viz-time-series.html">단변량/다변량 시계열 데이터</a></li>
-<li><a href="viz-ggjoy.html">제19대 국회 본회의 출석부 - joyplot</a></li>
-<li><a href="viz-waffle-military.html">남북한 군사력 비교 - 와플(Waffle)</a></li>
-<li><a href="viz-calendar.html">2018년 달력</a></li>
-</ul></li>
-<li><strong><a href="http://statkclee.github.io/data-science/ds-factor-dplyr-mosaic.html">범주형 데이터 시각화 기초</a></strong>
-<ul>
-<li><a href="viz-mosaic-plot.html">범주형 자료 - 모자이크(mosaic): 통계청 출산(2016)</a></li>
-<li><a href="viz-mosaic-ca.html">발전 에너지(원자력 포함) - 대응분석(Correspondance Analysis)</a></li>
-</ul></li>
-<li><strong>애니메이션(Animation)</strong>
-<ul>
-<li><a href="viz-animations.html">동영상 그래프(애니메이션) - 정당지지율</a></li>
-<li><a href="viz-africa-animation.html">왜 아프리카인가?</a></li>
-<li><a href="viz-happy-new-year.html">새해 복 많이 받으세요: <code>2020</code>년 쥐띠</a></li>
-<li><a href="viz-big4.html">빅4 회계법인 분석</a></li>
-</ul></li>
-<li><strong><a href="viz-interactive.html">인터랙티브(Interactive) 시각화</a></strong>
-<ul>
-<li><a href="viz-earthquake-shelter.html">지진해일 대피소 - crosstalk</a></li>
-<li><a href="viz-ggvis.html">ggvis = 웹브라우져 기능(Vega/D3) + ggplot</a></li>
-<li><a href="viz-nk-missile.html">북한 미사일 발사 연대기</a></li>
-<li><a href="viz-nk-missile-overview.html">북한 미사일 발사 분석</a></li>
-<li><a href="viz-trade-retaliation.html">무역보복 - UN Comtrade API</a></li>
-<li><strong><code>rbokeh</code> vs <code>plotly</code></strong>
-<ul>
-<li><a href="viz-rbokeh.html"><code>rbokeh</code> + <code>trelliscope</code></a></li>
-<li><a href="viz-plotly.html"><code>plotly</code> + <code>ggplot2</code></a></li>
-<li><a href="viz-congressman.html">국회의원 사진 - <code>trelliscopeJS</code></a>
-<ul>
-<li><a href="viz-trelliscope.html">빅데이터 시각화 - <code>trelliscopeJS</code></a><br />
-</li>
-<li><a href="https://statkclee.github.io/finance/finance-trelliscope-advanced.html">빅데이터 시각화 주식 - <code>trelliscopeJS</code></a></li>
-</ul></li>
-</ul></li>
-</ul></li>
-<li><strong>시각화 실무</strong>
-<ul>
-<li><a href="viz_who.html">세계보건기구(WHO) - 전문시각화</a></li>
-<li><a href="viz-household-balance-deciles.html">가구당 가계수지 - 10 분위별</a></li>
-<li><a href="viz-worldcup-germany.html">러시아 월드컵(2018) - 한국 vs 독일</a></li>
-<li><strong>treemap</strong>
-<ul>
-<li><a href="viz-pop-treemap.html">대한민국 인구변화(2000 vs 2015) - treemap</a></li>
-<li><a href="viz-grdp-treemap.html">지역내총생산 (GRDP) - treemap</a><br />
-</li>
-</ul></li>
-<li><a href="viz-retail-heatmap.html">유통소매점 - 인터랙티브 heatmap</a></li>
-<li><a href="viz-low-birth-rate.html">저출산과 소요예산 - 상관관계</a></li>
-<li><a href="viz-emoji.html">이모지(emoji): 코로나19</a></li>
-</ul></li>
-<li><strong>코로나19</strong>
-<ul>
-<li><a href="viz-mortality.html">코로나19 사망자와 경제성장율</a></li>
-<li><a href="viz-mortality-age.html">코로나19 연령별 사망자</a></li>
-</ul></li>
-</ul>
-        </div>
-      </div>
-      </article>
-      <div class="footer">
-        <a class="label swc-blue-bg" href="http://software-carpentry.org">Software Carpentry</a>
-        <a class="label swc-blue-bg" href="https://github.com/swcarpentry/lesson-template">Source</a>
-        <a class="label swc-blue-bg" href="mailto:admin@software-carpentry.org">Contact</a>
-        <a class="label swc-blue-bg" href="LICENSE.html">License</a>
-      </div>
-    </div>
-    <!-- Javascript placed at the end of the document so the pages load faster -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-    <script src="css/bootstrap/bootstrap-js/bootstrap.js"></script>
-    <script src='https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'></script>
-  </body>
-</html>
->>>>>>> ba910147c4b51aa74f2743469cbe81069268b48b

@@ -1,0 +1,109 @@
+---
+layout: page
+title: 데이터 시각화
+subtitle: "코로나19 백신 접종 추세"
+author:
+- name: "이광춘"
+  affiliation: "[Tidyverse Korea](https://www.facebook.com/groups/tidyverse/)"
+date: "`r Sys.Date()`"
+tags: ["데이터 과학", "Data Science", "데이터 사이언스", "R", "코로나19", "백신"]
+output:
+  html_document: 
+    include:
+      after_body: footer.html
+      before_body: header.html
+    toc: yes
+    toc_depth: 2
+    toc_float: true
+    highlight: tango
+    number_section: true
+    code_folding: show
+mainfont: NanumGothic
+editor_options: 
+  chunk_output_type: console
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE,
+                    comment="", digits = 3, tidy = FALSE, prompt = FALSE, fig.align = 'center')
+
+library(tidyverse)
+library(scales)
+library(showtext) # 글꼴, install.packages("showtext")
+library(extrafont)
+loadfonts()
+```
+
+# 백신 데이터 {#vaccine-dataset}
+
+
+
+```{r vaccine-data}
+library(tidyverse)
+library(countrycode)
+library(extrafont)
+loadfonts()
+
+vaccine <- read_csv("https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/vaccinations/vaccinations.csv",
+                  col_types= "ccDddddddddd")
+
+vaccine_tbl <- vaccine %>% 
+  mutate(ISO2 = countrycode(iso_code,
+                             origin = 'iso3c',
+                             destination = 'iso2c')) %>%
+  select(location,
+         ISO2,
+         date,
+         total_vaccinations,
+         people_vaccinated,
+         people_fully_vaccinated,
+         daily_vaccinations_raw) %>% 
+  # filter(str_detect(ISO2, "KR|JP|US|GB")) %>%
+  filter(str_detect(ISO2, "KR|JP|TW")) %>% 
+  group_by(ISO2) %>% 
+  arrange(date) %>% 
+  mutate(total_vaccinations = zoo::na.locf(total_vaccinations)) %>% 
+  mutate(country  = case_when(str_detect(location, "Korea") ~ "한국",
+                              str_detect(location, "Japan") ~ "일본",
+                              str_detect(location, "Taiwan") ~ "대만"))
+
+vaccine_tbl %>% 
+  reactable::reactable()
+```
+
+# 정적 그래프 {#vaccine-dataset-graph}
+
+
+```{r vaccine-data-graph}
+vaccine_g <- vaccine_tbl %>% 
+  ggplot(aes(x = date, y = total_vaccinations, color = country, group = country)) +
+    geom_line() +
+    geom_point(aes(group = seq_along(date))) +
+    geom_text(aes(label = location, family = "NanumGothic"), hjust = -0.3, size = 3.5) +
+    scale_y_continuous(labels = scales::comma) +
+    scale_x_date(date_labels = "%m-%d") +
+    theme_bw(base_family = "NanumGothic") +
+    labs(title = "코로나19 일별 접종자수",
+         x = "", 
+         y = "백신 접종자수",
+         color = "국가") +
+    theme(legend.position = "none")
+
+vaccine_g
+```
+
+
+
+# 애니메이션 [^gganimate] {#vaccine-dataset-animation}
+
+[^gganimate]: [Katherine Goode, "gganimate (with a spooky twist)", ISU Graphics Group - October 31, 2019](https://goodekat.github.io/presentations/2019-isugg-gganimate-spooky/slides.html#1)
+
+
+```{r vaccine-data-animation}
+library(gganimate)
+
+vaccine_g + transition_reveal(along = date)
+
+```
