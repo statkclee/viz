@@ -1,0 +1,113 @@
+---
+layout: page
+title: 데이터 시각화
+subtitle: "축구"
+author:
+- name: "이광춘"
+  affiliation: "[Tidyverse Korea](https://www.facebook.com/groups/tidyverse/)"
+date: "`r Sys.Date()`"
+tags: ["데이터 과학", "Data Science", "데이터 사이언스", "R", "축구", "football"]
+output:
+  html_document: 
+    include:
+      after_body: footer.html
+      before_body: header.html
+    toc: yes
+    toc_depth: 2
+    toc_float: true
+    highlight: tango
+    number_section: true
+    code_folding: show
+mainfont: NanumGothic
+editor_options: 
+  chunk_output_type: console
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE,
+                    comment="", digits = 3, tidy = FALSE, prompt = FALSE, fig.align = 'center')
+
+library(tidyverse)
+library(scales)
+library(showtext) # 글꼴, install.packages("showtext")
+library(extrafont)
+loadfonts()
+```
+
+
+# 데이터 {#football-data}
+
+[`worldfootballR`](https://github.com/JaseZiv/worldfootballR) 데이터 팩키지를 사용해서 다음 웹사이트에서 축구 데이터를 가져올 수 있다.
+
+- [`FBref`](https://fbref.com/en/)
+- [`Transfermarkt`](https://www.transfermarkt.com/)
+- [`Understat`](https://understat.com/)
+
+## `worldfootballR` 팩키지 설치 {#install-package}
+
+```{r install-package}
+# devtools::install_github("JaseZiv/worldfootballR")
+library(worldfootballR)
+```
+
+## `understatr` 팩키지 설치 {#install-package-understat}
+
+```{r install-package-understatr}
+# devtools::install_github("ewenme/understatr")
+library(understatr)
+```
+
+# 데이터 불러오기 - `understatr` {#basic-dataset}
+
+## 리그 메타 데이터 {#league-meta}
+
+축구리그 데이터를 확인해보자.
+
+```{r league-meta-data}
+get_leagues_meta()
+```
+
+## 리그 순위 {#epl-rank}
+
+EPL 2020시즌 팀순위를 살펴보자.
+
+```{r epl-rank}
+epl_league_2020 <- get_league_teams_stats(league_name = "EPL", year = 2020)
+
+epl_league_2020 %>% 
+  group_by(team_name) %>% 
+  summarise(pts = sum(pts),
+            wins = sum(wins),
+            draws = sum(draws),
+            loses = sum(loses)) %>% 
+  arrange(desc(pts)) %>% 
+  reactable::reactable()
+```
+
+
+## 팀 데이터 {#team-meta}
+
+손흥민이 뛰었던 2020 시즌 토트넘에서 손흥민을 찾아보자.
+
+```{r team-data}
+
+tottenham <- get_team_players_stats(team_name = "Tottenham", year = 2020)
+
+tottenham %>% 
+  reactable::reactable()
+```
+
+## 선수 데이터 {#team-player}
+
+손흥민의 과거 성적을 살펴보자.
+
+```{r player-dataset}
+son <- get_player_seasons_stats(player_id = 453)
+
+son %>% 
+  reactable::reactable()
+```
+
+

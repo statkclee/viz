@@ -67,6 +67,6 @@ title: 데이터 과학 -- 시각화
     - [코로나19 사망자와 경제성장율](viz-mortality.html)
     - [코로나19 연령별 사망자](viz-mortality-age.html)
     - [코로나19 백신 접종 추세](viz-vaccine-trends.html)
-
+- [축구](viz-football.html)
 
 
