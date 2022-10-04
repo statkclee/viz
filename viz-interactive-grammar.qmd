@@ -1,0 +1,137 @@
+---
+title: "데이터 시각화"
+subtitle: "인터랙티브 그래픽 문법"
+author:
+  - name: "데이터 과학자 이광춘"
+date: "2022-10-04"
+filters:
+   - lightbox
+lightbox: auto
+format:
+  html:
+    toc: true
+    code-fold: true
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE,
+                      comment="", digits = 3, tidy = FALSE, prompt = FALSE, fig.align = 'center')
+library(tidyverse)
+library(rvest)
+library(lubridate)
+```
+
+
+# 인터랙티브 그래픽 문법
+
+인터랙티브 그래픽 문법은 기존 **그래프 문법(Grammar of Graphics)**에 다음 문법이 추가된다.
+
++ `linking()`
++ `hover()`
++ `selection()`
++ `active()`
++ `zoom()`
++ `interactivity()`
+
+# `ggplot` 확장 도구
+
+`loon`은 우리나라말로 오리로 TCL 언어에 기반한 [`loon`](https://github.com/great-northern-diver/loon) 에 기반을 두고 있으며 이를 ggplot에 확장한 것이 [`loon.ggplot`](https://github.com/great-northern-diver/loon.ggplot) 이다. `loon.ggplot` 을 통해 두가지 세상(verse)을 연결할 수 있다.
+
+![](fig/loonggplotConnection.png)
+
+`loon.ggplot` 설치에 앞서 의존성을 `diveR`을 설치한다. `diveR`은 `tidyverse`처럼 인터랙티브 그래픽에 필요한 관련 패키지를 모두 설치해준다. 참고로 `diveR` 세상은 다음 패키지로 구성된다.
+
+- `diveR` 버스(verse)
+  - [loon](http://great-northern-diver.github.io/loon/)
+  - [loon.data](http://great-northern-diver.github.io/loon.data/)
+  - [zenplots](http://great-northern-diver.github.io/zenplots/)
+  - [ggmulti](http://great-northern-diver.github.io/ggmulti/)
+  - [loon.ggplot](http://great-northern-diver.github.io/loon.ggplot/)
+  - [loon.shiny](http://great-northern-diver.github.io/loon.shiny/)
+  - [loon.tourr](http://great-northern-diver.github.io/loon.tourr/)
+
+
+```{r}
+#| eval: false
+install.packages("diveR")
+install.packages("loon.ggplot")
+```
+
+
+# 헬로월드
+
+먼저, 산점도와 막대그래프를 ggplot으로 정적 그래프를 제작한다.
+
+```{r}
+#| layout-ncol: 2
+
+library(ggplot2)
+
+p <- ggplot(mtcars, aes(wt, mpg, colour = as.factor(cyl))) + 
+  geom_point()
+p
+
+h <- ggplot(mtcars, aes(x = hp, fill = as.factor(cyl))) + geom_histogram()
+h
+```
+
+`ggplot` 객체를 `ggplot2loon()` 함수에 던지게 되면 오리(loon) 객체로 변환되어 인터랙티브 시각화가 가능하게 된다.
+
+```{r}
+library(loon.ggplot)
+
+pl <- ggplot2loon(p)
+hl <- ggplot2loon(h)
+```
+
+![](fig/scatterAndHist.gif)
+
+`ggplot()` 함수를 `l_ggplot()`함수로 대체하여 `ggplot` 문법에 맞춰 시각화를 하게 되면 인터랙티브 그래픽을 제작할 수 있게 된다.
+
+```{r}
+# the scatter plot
+l_ggplot(mtcars, aes(wt, 
+                     mpg, 
+                     colour = as.factor(cyl))) + 
+  geom_point()
+# the histogram
+l_ggplot(mtcars, aes(x = hp, fill = as.factor(cyl))) + 
+  geom_histogram()
+```
+
+
+# 한걸음 더 들어가기
+
+## 심화학습 
+
+- [R.W. Oldford, "Introduction to loon", March 14, 2021](https://cran.r-project.org/web/packages/loon/vignettes/introduction.html)
+- [Interactive ggplots in R", SDSS 2019](https://www.math.uwaterloo.ca/~rwoldfor/talks/SDSS2019/loon.ggplot/assets/player/KeynoteDHTMLPlayer.html#0)
+
+## Shiny 앱
+
+ggplot을 인터랙티브 그래픽을 위해 `loon.shiny()`로 심화분석을 갈 수 있다.
+
+```{r}
+#| eval: false
+
+library(dplyr)
+gp <- gapminder %>% 
+  filter(year == 2007,
+         continent != "Oceania") %>%
+  ggplot(mapping = aes(gdpPercap, lifeExp, 
+                       colour = continent)) + 
+  geom_point(mapping = aes(size = pop)) + 
+  geom_smooth(mapping = aes(weight = pop),
+              method = "lm",
+              se = FALSE)
+
+library(loon.shiny)
+gp %>% 
+  loon.ggplot() %>% 
+  loon.shiny()
+```
+
+![](fig/GDPshiny.gif)
+

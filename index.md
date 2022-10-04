@@ -42,6 +42,7 @@ title: 데이터 과학 -- 시각화
     - [빅4 회계법인 분석](viz-big4.html)
     - [`gif` 이미지 편집](viz-gif.html) 
 - **[인터랙티브(Interactive) 시각화](viz-interactive.html)**
+    - [인터랙티브 그래픽 문법](viz-interactive-grammar.html)
     - [지진해일 대피소 - crosstalk](viz-earthquake-shelter.html)
     - [ggvis = 웹브라우져 기능(Vega/D3) + ggplot](viz-ggvis.html)
     - [북한 미사일 발사 연대기](viz-nk-missile.html)
